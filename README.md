@@ -22,10 +22,12 @@ This app has been designed for Android 2.1 and higher.  It may work with Android
 
 ##Credits
 
-Copyright © Chris Newhouse <chris@resonos.com>
+Copyright © Chris Newhouse
+
+Write me at chris ![](http://resonos.com/at.gif) resonos.com
 
 [resonos_website]: http://resonos.com/
 [github_resonos]: https://github.com/chrisnewhouse/Resonos-Android-Framework
 [github_holo]: https://github.com/ChristopheVersieux/HoloEverywhere
 [site_abs]: http://www.actionbarsherlock.com/
-[wiki_ifs]: http://http://en.wikipedia.org/wiki/Iterated_function_system
+[wiki_ifs]: http://en.wikipedia.org/wiki/Iterated_function_system
