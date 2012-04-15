@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Fractal Designer</string>
+    <string name="btn_editfrac">Editor</string>
+    <string name="btn_newfrac">Editor</string>
+    <string name="btn_gallery">Gallery</string>
+    <string name="btn_upgrade">Upgrade!</string>
+    <string name="btn_help">Help</string>
+    <string name="btn_contact">Contact</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_confirm">Confirm</string>
+    <string name="btn_yes">Yes</string>
+    <string name="btn_no">No</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_confirm">Confirm</string>
+    <string name="btn_continue">Continue</string>
+    <string name="btn_add">Add</string>
+    <string name="btn_remove">Remove</string>
+    <string name="btn_grid_show">Show Grid</string>
+    <string name="btn_grid_hide">Hide Grid</string>
+    <string name="btn_fix">Restore Editor</string>
+    <string name="btn_open">Open</string>
+    <string name="btn_update">Update!</string>
+    <string name="btn_quality">Quality</string>
+    <string name="btn_colorscheme">Color Scheme</string>
+    <string name="btn_share">Share</string>
+    <string name="btn_wallpaper">Set as Wallpaper</string>
+    <string name="btn_render">Render!</string>
+    <string name="btn_new_gradient">New Gradient</string>
+    <string name="btn_detail">Detail</string>
+    <string name="btn_colorsteps">Color Steps</string>
+    <string name="btn_change">Change</string>
+    <string name="btn_edit">Edit</string>
+    
+    <string name="title_gallery">Gallery</string>
+    <string name="title_color_schemes">Color Schemes</string>
+    <string name="title_color_editor">Color Scheme Editor</string>
+    
+    <string name="txt_gallery_saved_empty_pro">Once you save some fractals of your own, you\'ll see them here!</string>
+    <string name="txt_gallery_saved_empty">If you upgrade to the pro version, you can save your own fractals here!</string>
+    <string name="txt_save_fractal">Save Fractal</string>
+    <string name="txt_save_fractal_hint">Fractal Name</string>
+    <string name="txt_save_fractal_overwrite">This fractal already exists. Overwrite it?</string>
+    <string name="txt_save_fractal_short">You must enter a name for this fractal to save it!</string>
+    
+    <string name="txt_like_title">Like Using %1$s?</string>
+    <string name="txt_like_share">Share this App!</string>
+    <string name="txt_like_rate">Rate %1$s on the Market!</string>
+    <string name="txt_like_send">Send your Feedback</string>
+    <string name="txt_like_share_desc">Tell all your friends about it</string>
+    <string name="txt_like_rate_desc">We hope it\'s worth five stars.</string>
+    <string name="txt_like_send_desc">Have a suggestion, found a bug, or just want to say thanks? Write me!</string>
+    
+    <string name="txt_author">Created by Resonos Software</string>
+    <string name="txt_author_desc">"Thanks for using this app!\nI'm really just one guy who likes to make quality apps and games for Android. Please check out my other apps below!"</string>
+    <string name="txt_author_site">"Visit us online&#8230;"</string>
+    <string name="txt_author_site_desc">"&#8230;at http://resonos.com"</string>
+    
+    <string name="txt_apps">Other Apps and Games by Resonos</string>
+    <string name="txt_apps_k">Kaleidoscope</string>
+    <string name="txt_apps_k_desc">"Turn your camera or any picture into a smoothly animating and endlessly mesmerizing kaleidoscope!"</string>
+    <string name="txt_apps_bgo">Board Games Online</string>
+    <string name="txt_apps_bgo_desc">"A multiplayer online games community: play Chess, Checkers, Reversi, and Connect Four against players around the world. Complete with a social networking platform."</string>
+    <string name="txt_apps_jb">"Jewel Blaster"</string>
+    <string name="txt_apps_jb_desc">"Blast a platform of spinning jewels in outer space. How long can you survive the onslaught?"</string>
+    <string name="txt_apps_bb">"Basketball Online"</string>
+    <string name="txt_apps_bb_desc">"Shoot hoops in real time against players everywhere and try to top the scores. A new round starts every two minutes!"</string>
+    
+    <string name="txt_page01">Home</string>
+    <string name="txt_page02">Author</string>
+    <string name="txt_page03">Upgrade</string>
+    <string name="txt_page04">Changelog</string>
+    <string name="txt_page05">Permissions</string>
+    <string name="txt_page06">License</string>
+    
+    <string name="txt_changelog">"Version 2.0 - April 14, 2012|- Complete app rewrite with modern ICS-style Action Bar!\n- Feature: tutorial\n- Feature: Visible rendering progress\n- Feature / Bugfix: Panning and zooming now available in editor and vastly improved in renderer\n- Slightly modified editing system with hints added|Version 1.01 - January 21, 2011|- Reduced memory usage|Version 1.0 - January 19, 2011|- Initial release"</string>
+    <string name="txt_permissions">"INTERNET|- Allows access to the internet.\n- Used to check for updates and report errors to the developer|WRITE_EXTERNAL_STORAGE|- Used to save fractal pictures to the SD card.|SET_WALLPAPER|- Used to set the wallpaper to fractal images|ACCESS_NETWORK_STATE|- Used to determine whether or not the device currently has internet access"</string>
+    <string name="txt_license">" |There are just a few terms you must implicitly agree to when using our software, which are laid out as follows:| |- Resonos makes no guarantee of the software for any particular purpose.\n- You (the user) are solely responsible for all risks and outcomes of running the software.\n- You will not represent the software or any element thereof as your own. You are free to use images or other creations made with the software in its intended purpose in any way you see fit.\n- You will make no attempts to decompile or reverse-engineer the software.\n- You will not distribute the software in any way, however you are encouraged to tell your friends to find Resonos software in the Google Play Market!"</string>
+    <string name="txt_license_title">Resonos License Agreement</string>
+    <string name="txt_license_desc">Thank you for using a Resonos mobile application!</string>
+    <string name="txt_share">Check out this awesome app called Fractal Designer! Get it from Google Play Market: %1$s</string>
+    <string name="txt_share_fractal">"Share image using&#8230;"</string>
+    <string name="txt_share_fractal_desc">"Check out this cool picture I made using Fractal Designer for Android! Get Fractal Designer at https://market.android.com/details?id=com.resonos.apps.fractal.ifs"</string>
+    
+    <string name="txt_cat_def01">Spiral</string>
+    <string name="txt_cat_def02">Square</string>
+    <string name="txt_cat_def03">Triangular</string>
+    <string name="txt_cat_def04">Organic</string>
+    <string name="txt_cat_def05">Polygonal</string>
+    <string name="txt_cat_def06">Other</string>
+    <string name="txt_cat_saved">Saved</string>
+    
+    <string name="txt_oome">"Out Of Memory!"</string>
+    <string name="txt_oome_desc">"This fractal is too complex for your poor smartphone to render! Try using less transformations or a color scheme with one or few gradients."</string>
+    <string name="txt_out_of_memory">Your poor smartphone ran out of memory! Please try restarting the game, or contact us if you see this message frequently.</string>
+    <string name="txt_old_version">Your version of this app is out of date! Please update by going to the Android Market.</string>
+    <string name="txt_upgrade_ad">Upgrade to Fractal Designer Pro to remove ads like this!</string>
+    <string name="txt_rate_app">"You seem to have used Fractal Designer a number of times, we hope because you like it! If you feel the game deserves it, we'd appreciate a positive review in the Android Market. Thanks!"</string>
+
+    <string name="txt_upgrade">Fractal Designer</string>
+    <string name="txt_upgrade_sub">Professional Upgrade ($1.99)</string>
+    <string name="txt_upgrade_desc">"Thank you for using the free version of Fractal Designer. We'd appreciate your support by buying the full version for only $1.99.\nThe best part is that the upgrade just unlocks features in this app—no need to uninstall any old version."</string>
+    <string name="txt_upgrade_features">Pro Features:</string>
+    <string name="txt_upgrade_features_desc">- Save fractals you create in the Gallery\n- Design your own color schemes using a fully-featured gradient editor</string>
+    <string name="txt_upgrade_getit">Get It Now!</string>
+    <string name="txt_upgrade_getit_desc">Using the Google Play Market</string>
+    <string name="txt_upgrade_haveit">You\'ve Already Upgraded</string>
+    <string name="txt_upgrade_haveit_desc">Thanks for your support!</string>
+    <string name="txt_upgrade_need_save">You must have the pro version of Fractal Designer to save your own fractals. Check out the upgrade page!</string>
+    <string name="txt_upgrade_need_color_edit">You must have the pro version of Fractal Designer to edit color schemes. Check out the upgrade page!</string>
+    <string name="txt_upgrade_need_color_new">You must have the pro version of Fractal Designer to design your own color schemes. Check out the upgrade page!</string>
+    
+    <string name="btn_rate_market">Rate in Market</string>
+    <string name="btn_remind_later">Remind Me Later</string>
+    <string name="btn_never_again">Never Remind Me Again</string>
+    <string name="txt_interstitial">Your content will arrive in a moment, but by purchasing the ad-free upgrade, this brief pause before using Fractal Designer will be removed. Check it out on the upgrade page!</string>
+    <string name="txt_interstitial_offline">Your content will arrive in a moment, but by purchasing the ad-free upgrade, this brief pause before using Fractal Designer will be removed. Check it out on the upgrade page!</string>
+    <string name="txt_version_changes">Welcome to Version 2.0!  Along with a few bugfixes, you can now use your phone\'s orientation sensors to move the kaleidoscope.  Additionally, phones with proper touchscreens can now use a rotate gesture.</string>
+    <string name="error_no_sdcard">"Cannot access SD Card! It is either mounted or not inserted."</string>
+    <string name="txt_save_image_success">"Image saved, check your phone's media gallery!"</string>
+    <string name="txt_save_image_fail">"Unable to save image to storage"</string>
+    
+    <string name="help_action_mode">Tutorial</string>
+    <string name="help01">Welcome to the Fractal Designer tutorial! Just touch the screen anywhere to proceed, or hit your back button to leave the tutorial at any time.</string>
+    <string name="help02">If you would like to unlock the full features of the app, check out the Upgrade section.</string>
+    <string name="help02a">Thank you for upgrading Fractal Designer! Your support is appreciated.</string>
+    <string name="help03">The Editor is where all of the magic happens—in it you can create infinite varieties of fractals.</string>
+    <string name="help04">Here we are in the editor, on an empty white board with a box. Nothing is here—yet. We can pan around by dragging one finger, and zoom in and out using a two-finger pinch gesture. Try it out!</string>
+    <string name="help05">Fractals are composed of boxes, which you can add using this button.</string>
+    <string name="help06">A box is just that—a square that you can move (using the blue circle), rotate (using the pink circle), resize (using the green circle), and skew (using the two red circles). Try it on your own to get comfortable.</string>
+    <string name="help07">Now let\'s create a fractal. Watch the assembly steps…</string>
+    <string name="help08">Here we\'ve moved the first box into place</string>
+    <string name="help09">Now we\'ve created another box…</string>
+    <string name="help10">…and moved it into place. Look at that—already, we have a fractal! Now watch something really cool.</string>
+    <string name="help11">See just how easy it is to create endless fractals? Now how the boxes create these beautiful fractals is what you\'ll have to figure out on your own.</string>
+    <string name="help12">You can open and save fractals using the Action Bar buttons above.</string>
+    <string name="help13">And in the menu you can enable or disable a grid, and if you ever lose some boxes you had onscreen, restore them.</string>
+    <string name="help14">This editor is great, but the fractal looks kind of ugly still…</string>
+    <string name="help15">So let\'s render it!</string>
+    <string name="help16">Rendering takes a short amount of time, indicated by the progress in the action bar. Like the editor, you can pan and zoom with your fingers, but the fractal will need to rerender. The farther you zoom in, the longer it will take.</string>
+    <string name="help17">The quality button opens up two sliders. The detail level controls how detailed the render will be, but also how long it will take.</string>
+    <string name="help18">The color steps slider indicates how fast colors change. When you render things on your own, try playing with them to find the best look for your fractal.</string>
+    <string name="help19">You can change the color scheme as well. There are a variety of defaults for you to explore later. By upgrading, you will be able to design your own.</string>
+    <string name="help19a">You can change the color scheme as well. There are a variety of defaults for you to explore later. You can also design your own.</string>
+    <string name="help20">Using the action bar, you can save an image, share the fractal, or set it as your wallpaper.</string>
+    <string name="help21">Let\'s go back home now to see the Gallery.</string>
+    <string name="help22">The Gallery stores any fractals that you wish to save, as well as a variety of samples to get you started.</string>
+    <string name="help23">Here you can see all of the fractals, organized into categories. You can be drag your screen left or right to browse. Fractals saved by the user are in the rightmost category.</string>
+    <string name="help24">This ends your tutorial. Enjoy using Fractal Designer! Please consider purchasing the full version!</string>
+    <string name="help24a">This ends your tutorial. Enjoy using Fractal Designer! Thank you for upgrading!</string>
+
+</resources>
