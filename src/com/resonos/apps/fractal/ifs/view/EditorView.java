@@ -214,8 +214,12 @@ public class EditorView extends View {
 					public boolean onTouchDown(Coord touchPointView, Coord touchPointModel) {
 						Transformation t;
 						tSearch.clear();
-						if (mIndexSel != -1)
-							tSearch.add(trans.getTrans(mIndexSel)); // search selected trans first
+						if (mIndexSel != -1) {
+							if (mIndexSel >= 0 && mIndexSel < trans.transCount())
+								tSearch.add(trans.getTrans(mIndexSel)); // search selected trans first
+							else
+								mIndexSel = 0;
+						}
 						for (int iT = 0; iT < trans.transCount(); iT++) {
 							if (iT != mIndexSel)
 								tSearch.add(trans.getTrans(iT));
