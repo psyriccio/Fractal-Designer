@@ -100,6 +100,20 @@ public class IFSFractal {
 		public RawIFSFractal(IFSFractal f) {
 			data = f.createRaw();
 		}
+		/**
+		 * Creates a copy of the data for the user;
+		 * @return a copied multidimensional array
+		 */
+		public float[][] copyData() {
+			float[][] ff = new float[data.length][];
+			for (int i = 0; i < data.length; i++) {
+				float[] f = new float[data[i].length];
+				for (int j = 0; j < data[i].length; j++)
+					f[j] = data[i][j];
+				ff[i] = f;
+			}
+			return ff;
+		}
 	}
 
 	/**

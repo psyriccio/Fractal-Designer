@@ -68,7 +68,9 @@ public class IFSRender {
 		synchronized (mManager.mLock) {
 			mManager.mTrans = mRawFractal;
 			mStartingPointCount = 0;
-		}
+			if (mTask != null)
+				mTask.mCancel = true;
+		} 
 		mTask = new IFSRenderTask();
 		mTask.execute();
 	}
@@ -148,7 +150,7 @@ public class IFSRender {
 			i = mStartingPointCount;
 			j = mStartingPointCount;
 			pointsDrawn = i;
-			trans = mManager.mTrans.data;
+			trans = mManager.mTrans.copyData();
 			tc = trans.length;
 		}
 
@@ -211,6 +213,9 @@ public class IFSRender {
 			ploty = (int) (dim_y - ((int) ((y - zWindow.top) * scaley + 1.5f) - 1));
 			if (plotx >= 0 && ploty >= 0 && plotx < dim_x && ploty < dim_y) {
 				synchronized (mManager.mLock) {
+					if (task != null)
+						if (task.mCancel)
+							return;
 					mImage[t % fgColors.length][plotx][ploty]++;
 					i++;
 					pointsDrawn = i;
@@ -223,6 +228,9 @@ public class IFSRender {
 				table = 0;
 				div = 0.0f;
 				synchronized (mManager.mLock) {
+					if (task != null)
+						if (task.mCancel)
+							return;
 					for (int pix_i = 0; pix_i < mImage.length; pix_i++) {
 						pix = mImage[pix_i][plotx][ploty];
 						table = (int) (table % fgColors.length);
@@ -241,6 +249,9 @@ public class IFSRender {
 				if (div > 0 && i >= EditorView.IFS_BUFFER_POINTS) {
 					clr = (0xFF000000) | ((int) (ir / div) << 16) | ((int) (ig / div) << 8) | (int) (ib / div);
 					synchronized (mManager.mLock) {
+						if (task != null)
+							if (task.mCancel)
+								return;
 						if (mIm != null && !mIm.isRecycled())
 							mIm.setPixel((int) (plotx + dim_xo),
 									(int) (ploty + dim_yo), clr);
