@@ -271,7 +271,7 @@ public class Home extends FragmentBaseActivity {
 	 * Return true if this is the pro version.
 	 */
 	public boolean hasPro() {
-		return mHasPro;
+		return true; //mHasPro;
 	}
 
 	@Override
