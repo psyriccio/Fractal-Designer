@@ -1,13 +1,13 @@
 package com.resonos.apps.fractal.ifs;
 
 import java.io.File;
+import java.util.Map;
 
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 
-import com.resonos.apps.fractal.ifs.R;
 import com.resonos.apps.fractal.ifs.model.Gallery;
 import com.resonos.apps.fractal.ifs.util.IFSFile;
 import com.resonos.apps.library.BaseFragment;
@@ -24,10 +24,15 @@ public class Home extends FragmentBaseActivity {
 									STATE_EDITOR_FRAGMENT = "editorFragment",
 									STATE_RENDER_FRAGMENT = "renderFragment",
 									STATE_GALLERY_FRAGMENT = "galleryFragment",
-									STATE_TUTORIAL = "tutorial";
+									STATE_TUTORIAL = "tutorial",
+											STATE_GRAD_EDIT = "gradEditing",
+									RETAIN_GALLERY = "retainGallery";
 	public static final String PREF_COLORSCHEME = "prefColorScheme",
 								DEF_COLORSCHEME = "Space";
 	public static final String WEB_PAGE = "http://resonos.com/";
+	public static final String URL_BRAZIL = "http://www.oocities.org/capecanaveral/lab/1837/index_a.html";
+	public static final String PCKG_KALEIDO = "com.resonos.apps.kaleidoscope",
+			URL_BGO = "http://download.resonos.com/", PCKG_BBALL = "com.resonos.games.basketball", PCKG_JB = "com.resonos.games.jewelblaster";
 	
 	// objects
 	public FragmentMain fM;
@@ -47,6 +52,8 @@ public class Home extends FragmentBaseActivity {
 	// vars
 	boolean mIsDuringHelp = false;
 	boolean mHasPro = false;
+	private boolean updateGradientList = false;
+	private String mGradientEditing = null;
 	
 	
 	@Override
@@ -56,6 +63,7 @@ public class Home extends FragmentBaseActivity {
 		AppUtils.putFragment(this, outState, this, STATE_EDITOR_FRAGMENT, fE);
 		AppUtils.putFragment(this, outState, this, STATE_RENDER_FRAGMENT, fR);
 		AppUtils.putFragment(this, outState, this, STATE_GALLERY_FRAGMENT, fG);
+		outState.putString(STATE_GRAD_EDIT, mGradientEditing);
 		if (mHelp != null && isDuringHelp())
 			outState.putBundle(STATE_TUTORIAL, mHelp.onSaveInstanceState());
 	}
@@ -84,7 +92,6 @@ public class Home extends FragmentBaseActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		setTheme(R.style.Theme_Sherlock_K);
         // prepare dirs
 		new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/", IFSFile.DIR_EXTERNAL_FILES).mkdirs();
 		new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/", IFSFile.DIR_EXTERNAL_SHARED).mkdirs();
@@ -117,6 +124,9 @@ public class Home extends FragmentBaseActivity {
 			fE = (FragmentEditor)AppUtils.getFragment(this, savedInstanceState, this, STATE_EDITOR_FRAGMENT);
 			fR = (FragmentRender)AppUtils.getFragment(this, savedInstanceState, this, STATE_RENDER_FRAGMENT);
 			fG = (FragmentGallery)AppUtils.getFragment(this, savedInstanceState, this, STATE_GALLERY_FRAGMENT);
+			mGradientEditing = savedInstanceState.getString(STATE_GRAD_EDIT);
+			if (mGradientEditing == null)
+				mGradientEditing = ""; // because we use equals method, it cannot be null
 		}
 		mSelColors = AppUtils.getSavedString(mApp, PREF_COLORSCHEME, DEF_COLORSCHEME);
 		
@@ -124,9 +134,9 @@ public class Home extends FragmentBaseActivity {
 	}
 	
 	@Override
-	public Object onRetainCustomNonConfigurationInstance() {
-		super.onRetainCustomNonConfigurationInstance();
-		return new RetainedGallery(this);
+	public void onRetainCustomObjects(Map<String, Object> customRetain) {
+		super.onRetainCustomObjects(customRetain);
+		customRetain.put(RETAIN_GALLERY, new RetainedGallery(this));
 	}
 	
 	/**
@@ -141,6 +151,26 @@ public class Home extends FragmentBaseActivity {
 			uGal = home.mUserGallery;
 			mGal = home.mGallery;
 		}
+	}
+
+	/**
+	 * Set whether the gradient list needs to be updated with a new item,
+	 * 	returning the previous state
+	 * @param needsUpdate : true if there may be a new item
+	 * @return the previous state, so you can get and clear with one function call
+	 */
+	public boolean updateGradientList(boolean needsUpdate) {
+		boolean b = updateGradientList;
+		updateGradientList = needsUpdate;
+		return b;
+	}
+
+	/**
+	 * Set what gradient we are editing, for between fragment communication
+	 * @param gradName : the gradient name
+	 */
+	public void setGradientEditing(String gradName) {
+		mGradientEditing = gradName;
 	}
 	
 	@Override
@@ -242,7 +272,7 @@ public class Home extends FragmentBaseActivity {
 	 */
 	public void toGallery() {
 		if (fG == null)
-			fG = new FragmentGallery(false);
+			fG = FragmentGallery.create(false);
 		toChildFragment(fG);
 	}
 	
@@ -271,7 +301,7 @@ public class Home extends FragmentBaseActivity {
 	 * Return true if this is the pro version.
 	 */
 	public boolean hasPro() {
-		return true; //mHasPro;
+		return mHasPro;
 	}
 
 	@Override
@@ -308,5 +338,9 @@ public class Home extends FragmentBaseActivity {
 	 */
 	public Gallery getUserGallery() {
 		return mUserGallery;
+	}
+
+	public String getGradientEditing() {
+		return mGradientEditing;
 	}
 }

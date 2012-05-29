@@ -88,17 +88,17 @@ public class FractalView extends View implements FractalViewLock {
 	 * @param colorSteps : the starting number of color steps to use
 	 */
 	public FractalView(FragmentRender fragmentRender, Bundle inState, int pts, int colorSteps) {
-		super(fragmentRender._home);
-		_home = fragmentRender._home;
+		super(fragmentRender.getHome());
+		_home = fragmentRender.getHome();
 		mPoints = pts;
 		mColorSteps = colorSteps;
 		init();
 		
-		loadColors(fragmentRender._home.mGallery.getColorSchemeByName(fragmentRender._home.mSelColors));
+		loadColors(fragmentRender.getHome().mGallery.getColorSchemeByName(fragmentRender.getHome().mSelColors));
 		
 		// set up touch handling
 		Bundle touchBundle = (inState == null) ? null : inState.getBundle(STATE_TVW);
-		mTVW = new TouchViewWorker(fragmentRender._home.mApp, this, touchBundle,
+		mTVW = new TouchViewWorker(fragmentRender.getHome().mApp, this, touchBundle,
 				new TouchViewReceiver() {
 					/** Overridden to observe that we are beginning a pan/zoom, and to create a second bitmap if needed */
 					public boolean onTouchDown(Coord touchPointView, Coord touchPointModel) {
@@ -430,6 +430,10 @@ public class FractalView extends View implements FractalViewLock {
 	 * @return the bitmap, which is subject to change, so don't keep it around
 	 */
 	public Bitmap getRenderedBitmap() {
-		return mIm;
+		Bitmap img = Bitmap.createBitmap(mIm.getWidth(), mIm.getHeight(), Bitmap.Config.ARGB_8888);
+		Canvas c = new Canvas(img);
+		c.drawColor(mCM.getBGColor());
+		c.drawBitmap(mIm, 0, 0, null);
+		return img;
 	}
 }

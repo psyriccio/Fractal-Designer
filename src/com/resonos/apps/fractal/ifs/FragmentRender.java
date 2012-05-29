@@ -3,6 +3,7 @@ package com.resonos.apps.fractal.ifs;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -20,6 +21,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
 import android.widget.LinearLayout;
 
+import com.actionbarsherlock.widget.ShareActionProvider;
+import com.actionbarsherlock.widget.ShareActionProvider.OnShareTargetSelectedListener;
 import com.resonos.apps.fractal.ifs.model.ColorScheme;
 import com.resonos.apps.fractal.ifs.model.IFSFractal;
 import com.resonos.apps.fractal.ifs.util.IFSFile;
@@ -38,16 +41,13 @@ import com.resonos.apps.library.util.M;
  * with a Fractal render using a {@link FractalView}
  * @author Chris
  */
-public class FragmentRender extends BaseFragment {
+public class FragmentRender extends BaseFragment implements OnShareTargetSelectedListener {
 
 	// constants
 	public static final String PREF_POINTS = "savedPoints", PREF_STEPS = "savedSteps";
 	public static final int DEFAULT_POINTS = 200000, DEFAULT_STEPS = 25;
 	public static final String STATE_FRACTAL = "ifsFractal", STATE_FV = "fractalView",
 							STATE_QUALITY_TOOLBAR = "qualityToolBarShowing";
-
-	// context
-	public Home _home;
 	
 	// UI
 	private FractalView mFractalView;
@@ -57,18 +57,25 @@ public class FragmentRender extends BaseFragment {
 	
 	// vars
 	private boolean mUsingOneToolbar = false;
+//	private Intent mShareIntent = null;
 	
 	// saved state
 	private IFSFractal mFractal;
 	private boolean mRendered = false;
 	Bundle mStateFVBundle = null;
 
+	/** set the fractal being rendered in this fragment */
 	public void setFractal(IFSFractal fractal) {
 		mRendered = false;
 		mFractal = fractal;
 		if (mFractalView != null) {
 			mFractalView.reset();
 		}
+	}
+	
+	/** get the host activity as its derived class */
+	public Home getHome() {
+		return (Home)getActivity();
 	}
 	
 	@Override
@@ -87,10 +94,9 @@ public class FragmentRender extends BaseFragment {
 	@Override
 	public void onCreate(Bundle inState) {
 		super.onCreate(inState);
-        _home = (Home)getActivity();
 		if (inState != null) {
 			mStateFVBundle = inState.getBundle(STATE_FV);
-			mFractal = IFSFractal.loadFromString(_home, inState.getString(STATE_FRACTAL));
+			mFractal = IFSFractal.loadFromString(getHome(), inState.getString(STATE_FRACTAL));
 			mRendered = false; // to force a render
 		}
 	}
@@ -99,8 +105,7 @@ public class FragmentRender extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_render, null);
-        _home = (Home)getActivity();
-        _home.fR = this;
+        getHome().fR = this;
         
         mUsingOneToolbar = App.SCREEN_WIDTH > App.SCREEN_HEIGHT;
 		
@@ -116,7 +121,7 @@ public class FragmentRender extends BaseFragment {
 		mToolBar.init(this);
 
         mTBContainer = (LinearLayout)root.findViewById(R.id.tbContainer);
-		mToolBarQuality = new ToolBarRenderQuality(_home);
+		mToolBarQuality = new ToolBarRenderQuality(getHome());
         mTBContainer.addView(mToolBarQuality, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		mToolBarQuality.init(this);
 		if (savedInstanceState != null)
@@ -136,14 +141,14 @@ public class FragmentRender extends BaseFragment {
      * Navigate to the color scheme selector.
      */
 	public void toGradientList() {
-		_home.toChildFragment(new FragmentGradientList(this));
+		getHome().toChildFragment(new FragmentGradientList(this));
 	}
 
 	/**
 	 * @return Get the color steps preference.
 	 */
 	public int getSteps() {
-		return M.fit(AppUtils.getSavedInt(_home.mApp, PREF_STEPS, DEFAULT_STEPS), ToolBarRenderQuality.STEPS_MIN,
+		return M.fit(AppUtils.getSavedInt(getHome().mApp, PREF_STEPS, DEFAULT_STEPS), ToolBarRenderQuality.STEPS_MIN,
 				ToolBarRenderQuality.STEPS_MAX);
 	}
 
@@ -151,7 +156,7 @@ public class FragmentRender extends BaseFragment {
 	 * @return Get the render points preference.
 	 */
 	public int getPoints() {
-		return M.fit(AppUtils.getSavedInt(_home.mApp, PREF_POINTS, DEFAULT_POINTS),
+		return M.fit(AppUtils.getSavedInt(getHome().mApp, PREF_POINTS, DEFAULT_POINTS),
 				ToolBarRenderQuality.PTS_MIN, ToolBarRenderQuality.PTS_MAX);
 	}
 
@@ -168,7 +173,7 @@ public class FragmentRender extends BaseFragment {
 	
 	private Runnable onColorSchemeUpdated = new Runnable() {
 		public void run() {
-			ColorScheme cm = _home.mGallery.getColorSchemeByName(_home.mSelColors);
+			ColorScheme cm = getHome().mGallery.getColorSchemeByName(getHome().mSelColors);
 			boolean fgCountMatches = cm.getGradientCount() == mFractalView.mCM.getGradientCount();
 			mFractalView.loadColors(cm);
 			if (fgCountMatches) {
@@ -189,7 +194,7 @@ public class FragmentRender extends BaseFragment {
 			mRendered = true;
 		}
 		mToolBar.invalidateToolbar();
-		_home.invalidateOptionsMenu();
+		getHome().invalidateOptionsMenu();
     }
     
     @Override
@@ -203,7 +208,7 @@ public class FragmentRender extends BaseFragment {
 		if (mToolBarQuality.isShowing()) {
 			mToolBarQuality.hide();
 			mToolBar.invalidateToolbar();
-			_home.invalidateOptionsMenu();
+			getHome().invalidateOptionsMenu();
 			return true;
 		}
 		mRendered = false;
@@ -221,11 +226,11 @@ public class FragmentRender extends BaseFragment {
 	public void sliderBarChanged(SliderAction action, float value) {
 		switch (action) {
 		case POINTS:
-			AppUtils.setSavedInt(_home.mApp, PREF_POINTS, (int)value);
+			AppUtils.setSavedInt(getHome().mApp, PREF_POINTS, (int)value);
 			mFractalView.setPoints((int)value);
 			break;
 		case STEPS:
-			AppUtils.setSavedInt(_home.mApp, PREF_STEPS, (int)value);
+			AppUtils.setSavedInt(getHome().mApp, PREF_STEPS, (int)value);
 			mFractalView.setSteps((int)value);
 			break;
 		}
@@ -250,12 +255,39 @@ public class FragmentRender extends BaseFragment {
 			if (!mToolBarQuality.isShowing())
 				items.add(new Action(getString(R.string.btn_quality), Action.ICON_NONE, true, false, Actions.QUALITY));
 			items.add(new Action(getString(R.string.btn_colorscheme), mFractalView.mCM.generatePreview(48*3, 48, true, Color.BLACK), false, false, Actions.COLORS));
-			// _home.getResources().getColor(R.color.abs__holo_blue_light)
+			// getHome().getResources().getColor(R.color.abs__holo_blue_light)
 		}
 		items.add(new Action(getString(R.string.btn_save), R.drawable.ic_action_save, false, false, Actions.SAVE));
 		items.add(new Action(getString(R.string.btn_share), R.drawable.ic_action_share, false, false, Actions.SHARE));
+			//.actionProvider(createShareActionProvider(updateShareIntent(null), this)));
 		items.add(new Action(getString(R.string.btn_wallpaper), R.drawable.ic_image_picture, false, true, Actions.WALLPAPER));
 	}
+	
+	@Override
+	public boolean onShareTargetSelected(ShareActionProvider source,
+			Intent intent) {
+		final Intent newIntent = new Intent(intent);
+		String file = saveImage(mFractalView.getRenderedBitmap(), false);
+		newIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.parse("file://"+file));
+		getHome().mHandler.post(new Runnable() {
+			public void run() {
+				if (getHome() != null)
+					getHome().startActivity(newIntent);
+			}
+		});
+		return true;
+	}
+	
+//	private Intent updateShareIntent(String file) {
+//		if (mShareIntent == null) {
+//			mShareIntent = new Intent(android.content.Intent.ACTION_SEND);  
+//			mShareIntent.setType("image/jpeg");
+//			mShareIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.txt_share_fractal_desc));
+//		}
+//		if (file != null)
+//			mShareIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.parse("file://"+file));
+//		return mShareIntent;
+//	}
 
 	@Override
 	protected void onOptionsItemSelected(Enum<?> e) {
@@ -279,10 +311,10 @@ public class FragmentRender extends BaseFragment {
 		case WALLPAPER:
 			if (mFractalView.getRenderedBitmap() != null)
 				try {
-					_home.setWallpaper(mFractalView.getRenderedBitmap());
+					getHome().setWallpaper(mFractalView.getRenderedBitmap());
 				} catch (Exception ex) {
-					_home.mApp.toast("Unknown error setting wallpaper", false);
-					_home.mApp.mError.report("SetWallpaper", ex);
+					getHome().mApp.toast("Unknown error setting wallpaper", false);
+					getHome().mApp.mError.report("SetWallpaper", ex);
 				}
         	break;
 		case COLORS:
@@ -290,7 +322,7 @@ public class FragmentRender extends BaseFragment {
 			break;
 		case QUALITY:
 			toggleQualityToolBar();
-			_home.invalidateOptionsMenu();
+			getHome().invalidateOptionsMenu();
 			break;
 		}
 	}
@@ -311,16 +343,34 @@ public class FragmentRender extends BaseFragment {
 	 */
 	private String saveBitmapShared(App _app, Bitmap b, final String fn) {
 		File extDir = Environment.getExternalStorageDirectory();
-		String path = IFSFile.DIR_EXTERNAL_SHARED+fn+".jpg";
+		String fileName = fn + ".jpg";
+		String path = IFSFile.DIR_EXTERNAL_SHARED + fileName;
 		File fullPath = new File(extDir, path);
 		String filePath = fullPath.getPath();
-		
+
+		BufferedOutputStream bos = null, bos2 = null;
 		try {
-			FileOutputStream fos = new FileOutputStream(fullPath);
-			BufferedOutputStream bos = new BufferedOutputStream(fos);
-			b.compress(Bitmap.CompressFormat.JPEG, 90, bos);
+			try {
+				FileOutputStream fos = new FileOutputStream(fullPath);
+				bos = new BufferedOutputStream(fos);
+				b.compress(Bitmap.CompressFormat.JPEG, 90, bos);
+				bos.close();
+				bos = null;
+			} catch (IOException ex) { // can't access external storage, let's use internal
+				FileOutputStream fos = _app.getContext().openFileOutput(fileName, Context.MODE_WORLD_WRITEABLE);
+				bos2 = new BufferedOutputStream(fos);
+				b.compress(Bitmap.CompressFormat.JPEG, 90, bos2);
+				filePath = new File(_app.getContext().getFilesDir(), fileName).getPath();
+			} finally {
+				if (bos != null)
+					bos.close();
+				bos = null;
+				if (bos2 != null)
+					bos2.close();
+				bos2 = null;
+			}
 		} catch (Exception ex) {
-			_home.mApp.mError.report("SaveBitmapShared", ex, fn);
+			getHome().mApp.mError.report("SaveBitmapShared", ex, fn);
 			return null;
 		}
 		final Context acx = _app.getContext().getApplicationContext();
@@ -335,9 +385,9 @@ public class FragmentRender extends BaseFragment {
 	 * @return the path given to the image
 	 */
 	private String saveImage(Bitmap myImage, boolean toast) {
-		String fn = saveBitmapShared(_home.mApp, myImage, "" + new Date().getTime());
+		String fn = saveBitmapShared(getHome().mApp, myImage, "" + new Date().getTime());
 		if (toast)
-			_home.mApp.toast((fn != null) ? R.string.txt_save_image_success : R.string.txt_save_image_fail, false);
+			getHome().mApp.toast((fn != null) ? R.string.txt_save_image_success : R.string.txt_save_image_fail, false);
 		return fn;
 	}
 	

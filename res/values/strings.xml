@@ -13,7 +13,6 @@
     <string name="btn_yes">Yes</string>
     <string name="btn_no">No</string>
     <string name="btn_cancel">Cancel</string>
-    <string name="btn_confirm">Confirm</string>
     <string name="btn_continue">Continue</string>
     <string name="btn_add">Add</string>
     <string name="btn_remove">Remove</string>
@@ -56,6 +55,8 @@
     <string name="txt_author_desc">"Thanks for using this app!\nI'm really just one guy who likes to make quality apps and games for Android. Please check out my other apps below!"</string>
     <string name="txt_author_site">"Visit us online&#8230;"</string>
     <string name="txt_author_site_desc">"&#8230;at http://resonos.com"</string>
+    <string name="txt_thanks_to">"Thanks to&#8230;"</string>
+    <string name="txt_brazil">"This app was inspired by Brazil Fractal Builder created by David Chardonnet. Click here to visit Brazil's archived site."</string>
     
     <string name="txt_apps">Other Apps and Games by Resonos</string>
     <string name="txt_apps_k">Kaleidoscope</string>
@@ -67,6 +68,19 @@
     <string name="txt_apps_bb">"Basketball Online"</string>
     <string name="txt_apps_bb_desc">"Shoot hoops in real time against players everywhere and try to top the scores. A new round starts every two minutes!"</string>
     
+    <string name="txt_main_welcome">Welcome!</string>
+    <string name="txt_version">""Version %1$s"</string>
+    <string name="txt_main_update">"Update Available!"</string>
+    <string name="txt_main_update_desc">"Version %1$s is out, get it now!"</string>
+    <string name="txt_main_editor">Editor</string>
+    <string name="txt_main_editor_desc">Open up the editor to get started!</string>
+    <string name="txt_main_gallery">Gallery</string>
+    <string name="txt_main_gallery_desc">Check out the fractal gallery.</string>
+    <string name="txt_main_tutorial">Tutorial</string>
+    <string name="txt_main_tutorial_desc">Confused? Get some help here.</string>
+    <string name="txt_main_upgrade">Upgrade</string>
+    <string name="txt_main_upgrade_desc">Unlock the full potential of this app!</string>
+    
     <string name="txt_page01">Home</string>
     <string name="txt_page02">Author</string>
     <string name="txt_page03">Upgrade</string>
@@ -74,11 +88,12 @@
     <string name="txt_page05">Permissions</string>
     <string name="txt_page06">License</string>
     
-    <string name="txt_changelog">"Version 2.0 - April 14, 2012|- Complete app rewrite with modern ICS-style Action Bar!\n- Feature: tutorial\n- Feature: Visible rendering progress\n- Feature / Bugfix: Panning and zooming now available in editor and vastly improved in renderer\n- Slightly modified editing system with hints added|Version 1.01 - January 21, 2011|- Reduced memory usage|Version 1.0 - January 19, 2011|- Initial release"</string>
+    <string name="txt_changelog">"Version 2.11 - May 25, 2012|- Improvements to the gradient viewing and editing system|Version 2.1 - May 18, 2012|- Now zoom from center of views rather than coordinate system\n- Improperly displayed toolbars now fixed\n- Major gridlines added\n- Minor crashes and bugs fixed|Version 2.0 - April 14, 2012|- Complete app rewrite with modern ICS-style Action Bar!\n- Feature: tutorial\n- Feature: Visible rendering progress\n- Feature / Bugfix: Panning and zooming now available in editor and vastly improved in renderer\n- Slightly modified editing system with hints added|Version 1.01 - January 21, 2011|- Reduced memory usage|Version 1.0 - January 19, 2011|- Initial release"</string>
     <string name="txt_permissions">"INTERNET|- Allows access to the internet.\n- Used to check for updates and report errors to the developer|WRITE_EXTERNAL_STORAGE|- Used to save fractal pictures to the SD card.|SET_WALLPAPER|- Used to set the wallpaper to fractal images|ACCESS_NETWORK_STATE|- Used to determine whether or not the device currently has internet access"</string>
     <string name="txt_license">" |There are just a few terms you must implicitly agree to when using our software, which are laid out as follows:| |- Resonos makes no guarantee of the software for any particular purpose.\n- You (the user) are solely responsible for all risks and outcomes of running the software.\n- You will not represent the software or any element thereof as your own. You are free to use images or other creations made with the software in its intended purpose in any way you see fit.\n- You will make no attempts to decompile or reverse-engineer the software.\n- You will not distribute the software in any way, however you are encouraged to tell your friends to find Resonos software in the Google Play Market!"</string>
     <string name="txt_license_title">Resonos License Agreement</string>
     <string name="txt_license_desc">Thank you for using a Resonos mobile application!</string>
+    <string name="txt_share_short">"Share&#8230;"</string>
     <string name="txt_share">Check out this awesome app called Fractal Designer! Get it from Google Play Market: %1$s</string>
     <string name="txt_share_fractal">"Share image using&#8230;"</string>
     <string name="txt_share_fractal_desc">"Check out this cool picture I made using Fractal Designer for Android! Get Fractal Designer at https://market.android.com/details?id=com.resonos.apps.fractal.ifs"</string>
@@ -90,6 +105,9 @@
     <string name="txt_cat_def05">Polygonal</string>
     <string name="txt_cat_def06">Other</string>
     <string name="txt_cat_saved">Saved</string>
+    
+    <string name="txt_color_def">Presets</string>
+    <string name="txt_color_user">Custom</string>
     
     <string name="txt_oome">"Out Of Memory!"</string>
     <string name="txt_oome_desc">"This fractal is too complex for your poor smartphone to render! Try using less transformations or a color scheme with one or few gradients."</string>

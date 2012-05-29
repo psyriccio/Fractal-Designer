@@ -17,7 +17,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager.LayoutParams;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -33,37 +32,33 @@ import com.resonos.apps.library.util.M;
 
 public class GradientView extends View implements OnClickListener {
 
+	// constants
 	private static final int THUMB_RADIUS_SEL = App.inDP(16);
 	private static final int THUMB_RADIUS = App.inDP(10);
 	private static final int MARGIN = THUMB_RADIUS_SEL * 3;
 	
-	Button bDel;
-	Paint paint;
-	Paint tabPaintOB, tabPaintI, tabPaintOW, solidPaint;
+	// context
+	private FragmentGradientEditor _f;
+	private Context mContext;
+	
+	// objects
+	private Paint paint;
+	private Paint tabPaintOB, tabPaintI, tabPaintOW, solidPaint;
+	private Bitmap mBmp;
+	private View mMainContainer;
+	private ImageButton bRemove;
+	private Gradient colors;
+	private OnRemoveListener mRListener;
+	private GradientEditListener mGEListener;
 
-	int mHeight = -1;
-	int mWidth = -1;
-	
-	Bitmap mBmp;
-	
-	public KeyColor mSelKey = null;
-	boolean mTouchingKey = false;
-	
-	FragmentGradientEditor _f;
-	
-	boolean mEdit = false;
-    
-	Context mContext;
-	public View mMainContainer;
-	ImageButton bRemove;
-	Gradient colors;
-	
-	int position;
-
-	OnRemoveListener mRListener;
-	GradientEditListener mGEListener;
-	
-	boolean mVertical = false;
+	// vars
+	private int mHeight = -1;
+	private int mWidth = -1;
+	private KeyColor mSelKey = null;
+	private boolean mTouchingKey = false;
+	private boolean mEdit = false;
+	private int position;
+	private boolean mVertical = false;
 	
 	public interface OnRemoveListener {
 		public void onRemove(GradientView gradientView);
@@ -82,7 +77,7 @@ public class GradientView extends View implements OnClickListener {
 	public GradientView(FragmentGradientEditor f, OnRemoveListener rlis, boolean isDeletable) {
 		super(f.mActivity);
 		_f = f;
-		mContext = f._home;
+		mContext = f.getHome();
 		paint = new Paint();
 		paint.setStyle(Style.FILL);
 		
@@ -113,7 +108,7 @@ public class GradientView extends View implements OnClickListener {
 	public GradientView(FragmentGradientEditor f, GradientEditListener listener) {
 		super(f.mActivity);
 		_f = f;
-		mContext = f._home;
+		mContext = f.getHome();
 		paint = new Paint();
 		paint.setStyle(Style.FILL);
 		
@@ -341,7 +336,7 @@ public class GradientView extends View implements OnClickListener {
 				if (mSelKey != null) {
 					mTouchingKey = true;
 					mGEListener.onSelectedColorChanged(this, mSelKey);
-			    	_f._home.invalidateOptionsMenu();
+			    	_f.getHome().invalidateOptionsMenu();
 					invalidate();
 					return true;
 				}
@@ -360,7 +355,7 @@ public class GradientView extends View implements OnClickListener {
 						}
 					}
 					mSelKey = colors.add(color, (int)Math.round(pos));
-					_f._home.invalidateOptionsMenu();
+					_f.getHome().invalidateOptionsMenu();
 					mGEListener.onSelectedColorChanged(this, mSelKey);
 					mTouchingKey = true;
 					invalidate();
@@ -387,5 +382,20 @@ public class GradientView extends View implements OnClickListener {
 			break;
 		}
 		return true;
+	}
+
+	/**
+	 * set the selected key
+	 * @param key : the key
+	 */
+	public void setSelKey(KeyColor key) {
+		mSelKey = key;
+	}
+
+	/**
+	 * Get the selected key
+	 */
+	public KeyColor getSelKey() {
+		return mSelKey;
 	}
 }

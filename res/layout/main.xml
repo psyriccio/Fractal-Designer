@@ -21,12 +21,13 @@
 	        android:id="@+id/container"
 	        android:layout_width="fill_parent"
 	        android:layout_height="fill_parent"
-	        android:layout_below="@+id/spacer" />
+	        android:layout_below="@+id/spacer"
+	        android:layout_above="@+id/ad_container" />
 	    <FrameLayout
 	        android:id="@+id/ad_container"
 	        android:layout_alignParentBottom="true"
 	        android:layout_centerHorizontal="true"
-	        android:layout_width="wrap_content"
+	        android:layout_width="fill_parent"
 	        android:layout_height="wrap_content" />
 	</RelativeLayout>
 </RelativeLayout>

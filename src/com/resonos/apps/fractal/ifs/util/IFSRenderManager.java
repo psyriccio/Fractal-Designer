@@ -9,6 +9,7 @@ import android.view.View;
 import com.resonos.apps.fractal.ifs.FragmentGallery;
 import com.resonos.apps.fractal.ifs.Home;
 import com.resonos.apps.fractal.ifs.model.ColorScheme.PreparedColorScheme;
+import com.resonos.apps.fractal.ifs.model.IFSFractal;
 import com.resonos.apps.fractal.ifs.model.IFSFractal.RawIFSFractal;
 import com.resonos.apps.fractal.ifs.util.IFSRender.FractalViewLock;
 import com.resonos.apps.fractal.ifs.view.FractalView;
@@ -92,10 +93,10 @@ public abstract class IFSRenderManager implements FractalViewLock {
 	/**
 	 * Create the render manager based on a gallery and raw fractal
 	 * @param fg : the gallery fragment
-	 * @param trans : a raw calculated fractal
+	 * @param ifs : a raw calculated fractal
 	 */
-	public IFSRenderManager(FragmentGallery fg, RawIFSFractal trans) { // preview render
-		_home = fg._home;
+	public IFSRenderManager(FragmentGallery fg, IFSFractal ifs) { // preview render
+		_home = fg.getHome();
 		isPreview = true;
 		mTVW = null;
 		mLock = fg;
@@ -107,7 +108,7 @@ public abstract class IFSRenderManager implements FractalViewLock {
 		mColorScheme = fg.mColorScheme;
 		drawBGColor = mColorScheme.mBGColor;
 		
-		mTrans = trans;
+		mTrans = ifs.calculateRaw();
 		init();
 	}
 

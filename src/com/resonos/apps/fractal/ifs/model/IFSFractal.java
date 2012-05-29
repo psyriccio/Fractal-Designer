@@ -59,7 +59,13 @@ public class IFSFractal {
 	public String save() {
     	GsonBuilder gsonBilder = new GsonBuilder();
     	Gson gson = gsonBilder.create();
-        return gson.toJson(this, IFSFractal.class);
+		try {
+	        return gson.toJson(this, IFSFractal.class);
+		} catch (IllegalArgumentException ex) {
+			// in case of any NaN's (due to excessively large fractals
+			// let's just store a new fractal
+			return gson.toJson(new IFSFractal(), IFSFractal.class);
+		}
 	}
 	
 	/**

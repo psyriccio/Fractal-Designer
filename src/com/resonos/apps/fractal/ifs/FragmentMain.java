@@ -1,333 +1,332 @@
 package com.resonos.apps.fractal.ifs;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import android.content.Intent;
-import android.graphics.Color;
-import android.os.Bundle;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import br.com.dina.ui.BasicItem;
-import br.com.dina.ui.UITableView;
-import br.com.dina.ui.UITableView.ClickListener;
 
 import com.resonos.apps.library.Action;
 import com.resonos.apps.library.App;
 import com.resonos.apps.library.BaseFragment;
+import com.resonos.apps.library.tabviewpager.TabViewPagerFragment;
 import com.resonos.apps.library.util.AppUtils;
-import com.viewpagerindicator.PageIndicator;
-import com.viewpagerindicator.TabPageIndicator;
-import com.viewpagerindicator.TitleProvider;
+import com.resonos.apps.library.util.M;
+import com.resonos.apps.library.widget.FormBuilder;
+import com.resonos.apps.library.widget.FormElement;
+import com.resonos.apps.library.widget.ListFormBuilder;
+import com.resonos.apps.library.widget.ListFormBuilder.OnFormItemClickListener;
 
 /**
- * This is the introduction fragment and is mostly for navigation and displaying information.
+ * This is the introduction fragment and is mostly for navigation and displaying
+ * information.
+ * 
  * @author Chris
  */
-public class FragmentMain extends BaseFragment implements ClickListener {
+public class FragmentMain extends TabViewPagerFragment implements
+		OnFormItemClickListener {
 
 	/** the built-in categories */
 	private static final int[] PAGE_TITLES_RES = new int[] {
-		R.string.txt_page01, R.string.txt_page02, R.string.txt_page03,
-		R.string.txt_page04, R.string.txt_page05, R.string.txt_page06};
-	private enum Page {HOME, AUTHOR, UPGRADE, CHANGELOG, PERMISSIONS, LICENSE};
-	
-	// context
-	public Home _home;
+			R.string.txt_page01, R.string.txt_page02, R.string.txt_page03,
+			R.string.txt_page04, R.string.txt_page05, R.string.txt_page06 };
 
-	// objects
-	UITableViewAdapter mAdapter;
-	ViewPager mPager;
-	PageIndicator mIndicator;
-	UITableView uiMainBlock;
+	private enum Page {
+		HOME, AUTHOR, UPGRADE, CHANGELOG, PERMISSIONS, LICENSE
+	};
+
+	private static final int[] PAGE_COLUMNS = new int[] { 0, 1, 1, 1, 1, 1 };
+
+	FormBuilder mainPage;
 
 	@Override
-	public void onCreate(Bundle icicle) {
-		super.onCreate(icicle);
-		if (icicle != null) {
-			//
-		}
-	}
-	
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
+	protected int[] getData() {
+		return PAGE_TITLES_RES;
 	}
 
 	@Override
-	public View onCreateView(LayoutInflater l, ViewGroup container,
-			Bundle icicle) {
-		_home = (Home) getActivity();
-		View root = l.inflate(R.layout.fragment_main, null);
-		mAdapter = new UITableViewAdapter(PAGE_TITLES_RES);
-		mPager = (ViewPager)root.findViewById(R.id.pager);
-		mPager.setAdapter(mAdapter);
-		mIndicator = (TabPageIndicator)root.findViewById(R.id.indicator);
-		mIndicator.setViewPager(mPager);
-		return root;
-	}
-	
-	@Override
-	public void onActivityCreated(Bundle icicle) {
-		super.onCreate(icicle);
-		_home = (Home)getActivity();
-	}
-	
-	@Override
-	public void onResume() {
-		super.onResume();
+	protected int[] getColumnData() {
+		return PAGE_COLUMNS;
 	}
 
 	@Override
-	public void onDestroy() {
-		super.onDestroy();
+	protected int[] getIconData() {
+		return null;
 	}
-	
+
+	@Override
+	protected boolean[] getVisibleData() {
+		return null;
+	}
+
 	/**
-	 * Create the UI for this view.
-	 * Done rather manually, it might be better to use a markup language...
-	 * @param position : the page to create
-	 * @return
+	 * Convenience to get the host activity as its main class
+	 * 
+	 * @return a {@link Home} object
 	 */
-	private View createUITableView(Page page) {
-		ScrollView sv = new ScrollView(_home);
-		sv.setFillViewport(true);
-		LinearLayout ll = new LinearLayout(_home);
-		ll.setGravity(Gravity.CENTER);
-		ll.setOrientation(LinearLayout.VERTICAL);
-		sv.addView(ll);
-		UITableView v;
+	public Home getHome() {
+		return (Home) getActivity();
+	}
 
+	@Override
+	protected View getView(int position) {
+		int iconsize = App.inDP(48);
+		Page p = Page.values()[position];
+		switch (p) {
+		case HOME:
+			mainPage = new ListFormBuilder(getActivity(), null, this);
+			FormBuilder b = mainPage;
+			return buildMainPage(b);
+		case AUTHOR:
+			b = new ListFormBuilder(getActivity(), null, this);
+			b.newSection(getString(R.string.txt_author));
+			b.newItem()
+					.text(R.string.txt_author_site,
+							R.string.txt_author_site_desc)
+					.icon(R.drawable.icon_resonos).drawSize(iconsize)
+					.onClick(Actions.WEBSITE);
+
+			b.newSection(getString(R.string.txt_apps));
+			b.newItem().text(R.string.txt_apps_k, R.string.txt_apps_k_desc)
+					.icon(R.drawable.icon_kaleidoscope).drawSize(iconsize)
+					.onClick(Actions.APP_KSCOPE);
+			b.newItem().text(R.string.txt_apps_bgo, R.string.txt_apps_bgo_desc)
+					.icon(R.drawable.icon_bgo).drawSize(iconsize)
+					.onClick(Actions.APP_BGO);
+			b.newItem().text(R.string.txt_apps_jb, R.string.txt_apps_jb_desc)
+					.icon(R.drawable.icon_jb).drawSize(iconsize)
+					.onClick(Actions.APP_JB);
+			b.newItem().text(R.string.txt_apps_bb, R.string.txt_apps_bb_desc)
+					.icon(R.drawable.icon_bball).drawSize(iconsize)
+					.onClick(Actions.APP_BBALL);
+			return b.finish();
+		case UPGRADE:
+			b = new ListFormBuilder(getActivity(), null, this);
+			if (getHome().hasPro()) {
+				b.newItem()
+						.text(R.string.txt_upgrade_haveit,
+								R.string.txt_upgrade_haveit_desc).center()
+						.icon(R.drawable.icon_pro).drawSize(iconsize);
+			} else {
+				b.newItem()
+						.text(R.string.txt_upgrade, R.string.txt_upgrade_sub)
+						.center();
+				b.newItem().subtitle(R.string.txt_upgrade_desc);
+				b.newItem().text(R.string.txt_upgrade_features,
+						R.string.txt_upgrade_features_desc);
+				b.newItem()
+						.text(R.string.txt_upgrade_getit,
+								R.string.txt_upgrade_getit_desc).center()
+						.icon(R.drawable.icon_pro).drawSize(iconsize)
+						.onClick(Actions.UPGRADE);
+			}
+			return b.finish();
+		case CHANGELOG:
+			b = new ListFormBuilder(getActivity(), null, this);
+			addDataFromString(b, R.string.txt_changelog);
+			return b.finish();
+		case PERMISSIONS:
+			b = new ListFormBuilder(getActivity(), null, this);
+			addDataFromString(b, R.string.txt_permissions);
+			return b.finish();
+		case LICENSE:
+			b = new ListFormBuilder(getActivity(), null, this);
+			b.newItem()
+					.text(R.string.txt_license_title, R.string.txt_license_desc)
+					.center();
+			addDataFromString(b, R.string.txt_license);
+			return b.finish();
+		}
+		M.loge("FragmentPublic", "getView() returning NULL!!! pos = "
+				+ position);
+		return null;
+	}
+
+	/**
+	 * Set up the main block on Page.HOME. We've separated out this function
+	 * because when the app receives data from the internet, it may invalidate
+	 * this table to insert a line.
+	 * 
+	 * @param b
+	 *            : the form builder
+	 */
+	private View buildMainPage(FormBuilder b) {
 		int actionsize = App.inDP(32);
 		int iconsize = App.inDP(48);
-		
-		int maxWidth = App.inDP(560);
-		LinearLayout.LayoutParams lllp = new LinearLayout.LayoutParams(
-				App.SCREEN_WIDTH > maxWidth ? maxWidth : LayoutParams.MATCH_PARENT,
-						LayoutParams.WRAP_CONTENT);
-		
-		switch (page) {
-		case HOME:
-			uiMainBlock = new UITableView(_home, null);
-			setupMainBlock(uiMainBlock);
-			ll.addView(uiMainBlock, lllp);
+		Home home = getHome();
 
-			v = new UITableView(_home, null);
-			v.addBasicItem(new BasicItem(getString(R.string.txt_like_title,
-					_home.mApp.getAppName())).setClickable(false).setGravity(Gravity.CENTER));
-			v.addBasicItem(new BasicItem(R.drawable.ic_action_share,
-					getString(R.string.txt_like_share), getString(R.string.txt_like_share_desc))
-					.setTag(Actions.APP_SHARE).setDrawableSize(actionsize).setIconColor(Color.BLACK));
-			v.addBasicItem(new BasicItem(R.drawable.ic_action_rate_up,
-					getString(R.string.txt_like_rate, _home.mApp.getAppName()),
-					getString(R.string.txt_like_rate_desc)).setTag(Actions.APP_RATE)
-					.setDrawableSize(actionsize).setIconColor(Color.BLACK));
-			v.addBasicItem(new BasicItem(R.drawable.ic_action_send,
-					getString(R.string.txt_like_send), getString(R.string.txt_like_send_desc))
-					.setTag(Actions.APP_FEEDBACK).setDrawableSize(actionsize).setIconColor(Color.BLACK));
-			v.setClickListener(this);
-			v.commit();
-			ll.addView(v, lllp);
-			break;
-		case AUTHOR:
-			v = new UITableView(_home, null);
-			v.addBasicItem(new BasicItem(getString(R.string.txt_author),
-					getString(R.string.txt_author_desc)).setGravity(Gravity.CENTER).setClickable(false));
-			v.addBasicItem(new BasicItem(R.drawable.icon_resonos,
-					getString(R.string.txt_author_site), getString(R.string.txt_author_site_desc))
-					.setTag(Actions.WEBSITE).setDrawableSize(iconsize));
-			v.setClickListener(this);
-			v.commit();
-			ll.addView(v, lllp);
+		b.clear();
 
-			v = new UITableView(_home, null);
-			v.addBasicItem(new BasicItem(getString(R.string.txt_apps))
-					.setGravity(Gravity.CENTER).setClickable(false));
-			v.addBasicItem(new BasicItem(R.drawable.icon_kaleidoscope,
-					getString(R.string.txt_apps_k), getString(R.string.txt_apps_k_desc))
-					.setTag(Actions.APP_KSCOPE).setDrawableSize(iconsize));
-			v.addBasicItem(new BasicItem(R.drawable.icon_bgo,
-					getString(R.string.txt_apps_bgo), getString(R.string.txt_apps_bgo_desc))
-					.setTag(Actions.APP_BGO).setDrawableSize(iconsize));
-			v.addBasicItem(new BasicItem(R.drawable.icon_jb,
-					getString(R.string.txt_apps_jb), getString(R.string.txt_apps_jb_desc))
-					.setTag(Actions.APP_JB).setDrawableSize(iconsize));
-			v.addBasicItem(new BasicItem(R.drawable.icon_bball,
-					getString(R.string.txt_apps_bb), getString(R.string.txt_apps_bb_desc))
-					.setTag(Actions.APP_BBALL).setDrawableSize(iconsize));
-			v.setClickListener(this);
-			v.commit();
-			ll.addView(v, lllp);
-			break;
-		case UPGRADE:
-			if (_home.hasPro()) {
-				v = new UITableView(_home, null);
-				v.addBasicItem(new BasicItem(R.drawable.icon_pro, getString(R.string.txt_upgrade_haveit),
-						getString(R.string.txt_upgrade_haveit_desc)).setGravity(Gravity.CENTER)
-						.setClickable(false).setDrawableSize(iconsize));
-				v.setClickListener(this);
-				v.commit();
-				ll.addView(v, lllp);
-			} else {
-				v = new UITableView(_home, null);
-				v.addBasicItem(new BasicItem(getString(R.string.txt_upgrade),
-						getString(R.string.txt_upgrade_sub)).setGravity(Gravity.CENTER).setClickable(false));
-				v.addBasicItem(new BasicItem(null,
-						getString(R.string.txt_upgrade_desc)).setClickable(false));
-				v.addBasicItem(new BasicItem(getString(R.string.txt_upgrade_features),
-						getString(R.string.txt_upgrade_features_desc)).setClickable(false));
-				v.addBasicItem(new BasicItem(R.drawable.icon_pro,
-						getString(R.string.txt_upgrade_getit), getString(R.string.txt_upgrade_getit_desc))
-						.setTag(Actions.UPGRADE).setDrawableSize(iconsize));
-				v.setClickListener(this);
-				v.commit();
-				ll.addView(v, lllp);
-			}
-			break;
-		case CHANGELOG:
-			v = new UITableView(_home, null);
-			addDataFromString(v, R.string.txt_changelog);
-			v.commit();
-			ll.addView(v, lllp);
-			break;
-		case PERMISSIONS:
-			v = new UITableView(_home, null);
-			addDataFromString(v, R.string.txt_permissions);
-			v.commit();
-			ll.addView(v, lllp);
-			break;
-		case LICENSE:
-			v = new UITableView(_home, null);
-			v.addBasicItem(new BasicItem(getString(R.string.txt_license_title),
-					getString(R.string.txt_license_desc)).setGravity(Gravity.CENTER).setClickable(false));
-			addDataFromString(v, R.string.txt_license);
-			v.commit();
-			ll.addView(v, lllp);
-			break;
-		}
-		return sv;
+		b.newSection(R.string.txt_main_welcome);
+
+		if (home != null)
+			if (home.mApp.isOldVersion())
+				b.newItem()
+						.text(getString(R.string.txt_main_update),
+								getString(R.string.txt_main_update_desc,
+										home.mApp.mNewVersionID))
+						.onClick(Actions.UPDATE)
+						.icon(R.drawable.ic_action_download)
+						.drawColor(0xFFFF0000).drawSize(actionsize)
+						.textColor(0xFFFFDDDD);
+
+		b.newItem().icon(R.drawable.home_btn_loadpic)
+				.text(R.string.txt_main_editor, R.string.txt_main_editor_desc)
+				.onClick(Actions.TO_EDITOR).drawColor(0xFF99CC00).drawSize(iconsize);
+		b.newItem()
+				.icon(R.drawable.home_btn_gallery)
+				.text(R.string.txt_main_gallery, R.string.txt_main_gallery_desc)
+				.onClick(Actions.TO_GALLERY).drawColor(0xFF33B5E5).drawSize(iconsize);
+		b.newItem()
+				.icon(R.drawable.home_btn_help)
+				.text(R.string.txt_main_tutorial,
+						R.string.txt_main_tutorial_desc)
+				.onClick(Actions.TO_TUTORIAL).drawColor(0xFFAA66CC).drawSize(iconsize);
+		if (!getHome().hasPro())
+			b.newItem()
+					.icon(R.drawable.home_btn_upgrade)
+					.text(R.string.txt_main_upgrade,
+							R.string.txt_main_upgrade_desc)
+					.onClick(Actions.TO_UPGRADE).drawColor(0xFFFFBB33).drawSize(iconsize);
+
+		b.newSection(getString(R.string.txt_like_title,
+				getHome().mApp.getAppName()));
+		b.newItem().text(R.string.txt_like_share, R.string.txt_like_share_desc)
+				.onClick(Actions.APP_SHARE).icon(R.drawable.ic_action_share)
+				.drawSize(actionsize);
+		b.newItem()
+				.text(getString(R.string.txt_like_rate,
+						getHome().mApp.getAppName()),
+						getString(R.string.txt_like_rate_desc))
+				.onClick(Actions.APP_RATE).icon(R.drawable.ic_action_rate_up)
+				.drawSize(actionsize);
+		b.newItem().text(R.string.txt_like_send, R.string.txt_like_send_desc)
+				.onClick(Actions.APP_FEEDBACK).icon(R.drawable.ic_action_send)
+				.drawSize(actionsize);
+
+		b.newSection(getString(R.string.txt_thanks_to));
+		b.newItem().subtitle(R.string.txt_brazil).onClick(Actions.TO_BRAZIL);
+		return b.finish();
 	}
 
 	/**
 	 * Some of the data to display in stored as string resources in the format:
-	 *    title1|desc1|title2|desc2|etc....
-	 * This will add that data in rows to a UITableView
-	 * @param v : the UITableView
-	 * @param txt : the string resource to load from
+	 * title1|desc1|title2|desc2|etc.... This will add that data in rows to a
+	 * UITableView
+	 * 
+	 * @param v
+	 *            : the FormBuilder
+	 * @param txt
+	 *            : the string resource to load from
 	 */
-	private void addDataFromString(UITableView v, int txt) {
+	private void addDataFromString(FormBuilder b, int txt) {
 		String[] lines = getString(txt).split("\\|");
-		for (int i = 0; i < lines.length/2; i++)
-			v.addBasicItem(new BasicItem((lines[i*2].trim().equals("") ? null : lines[i*2]),
-					(lines[i*2+1].trim().equals("") ? null : lines[i*2+1])).setClickable(false));
+		for (int i = 0; i < lines.length / 2; i++)
+			b.newItem().text(
+					(lines[i * 2].trim().equals("") ? null : lines[i * 2]),
+					(lines[i * 2 + 1].trim().equals("") ? null
+							: lines[i * 2 + 1]));
 	}
 
-	/** 
-	 * call this when the app finds out it is an old version,
-	 * to refresh the home page UITableView 
-	 * @param newVersionID : the new version
+	/**
+	 * call this when the app finds out it is an old version, to refresh the
+	 * home page UITableView
+	 * 
+	 * @param newVersionID
+	 *            : the new version
 	 */
 	public void onOldVersion(String newVersionID) {
-		_home.invalidateOptionsMenu();
-		setupMainBlock(uiMainBlock);
+		getHome().invalidateOptionsMenu();
+		invalidate();
 	}
-	
+
 	/**
-	 * Set up the main block on Page.HOME.
-	 * We've separated out this function because
-	 *	when the app receives data from the internet, it may
-	 *  invalidate this table to insert a line.
-	 * @param v
+	 * Rebuild anything that needs to be rebuilt
 	 */
-	private void setupMainBlock(UITableView v) {
-		int actionsize = App.inDP(32);
-		
-		v.clear();
-		v.addBasicItem(new BasicItem(_home.mApp.getAppName(), "Version " + _home.mApp.getVersionID()).setClickable(false).setGravity(Gravity.CENTER));
-
-		_home = (Home)getActivity();
-		if (_home != null)
-			if (_home.mApp.isOldVersion())
-				v.addBasicItem(new BasicItem(R.drawable.ic_action_info, "Update Available!", "Version " + _home.mApp.mNewVersionID + " is out, get it now!").setTag(Actions.UPDATE).setDrawableSize(actionsize).setColor(0xFF880000).setIconColor(0xFF880000));
-		
-		v.addBasicItem(new BasicItem(R.drawable.home_btn_loadpic, "Editor", "Open up the editor to get started!").setTag(Actions.TO_EDITOR).setIconColor(0xFF99CC00));
-		v.addBasicItem(new BasicItem(R.drawable.home_btn_gallery, "Gallery", "Check out the fractal gallery.").setTag(Actions.TO_GALLERY).setIconColor(0xFF33B5E5));
-		v.addBasicItem(new BasicItem(R.drawable.home_btn_help, "Tutorial", "Confused? Get some help here.").setTag(Actions.TO_TUTORIAL).setIconColor(0xFFAA66CC));
-		if (!_home.hasPro())
-			v.addBasicItem(new BasicItem(R.drawable.home_btn_upgrade, "Upgrade", "Unlock the full potential of this app!").setTag(Actions.TO_UPGRADE).setIconColor(0xFFFFBB33));
-		v.setClickListener(this);
-		v.commit();
+	public void invalidate() {
+		if (mainPage != null)
+			buildMainPage(mainPage);
 	}
 
-	/** an enum representing the possible actions, either from the actioni bar or the UITableViews */
-	public enum Actions {UPGRADE, UPDATE, TO_EDITOR, TO_GALLERY, TO_TUTORIAL, TO_UPGRADE, APP_SHARE, APP_RATE, APP_FEEDBACK, WEBSITE, APP_KSCOPE, APP_BGO, APP_JB, APP_BBALL};
+	/**
+	 * an enum representing the possible actions, either from the actioni bar or
+	 * the UITableViews
+	 */
+	public enum Actions {
+		UPGRADE, UPDATE, TO_EDITOR, TO_GALLERY, TO_TUTORIAL, TO_UPGRADE, APP_SHARE, APP_RATE, APP_FEEDBACK, WEBSITE, APP_KSCOPE, APP_BGO, APP_JB, APP_BBALL, TO_BRAZIL
+	};
 
 	@Override
-	public void onClick(UITableView tv, Enum<?> tag, int position) {
-		Actions a = (Actions)tag;
+	public void onClick(Enum<?> tag, int pos, FormElement fe) {
+		Actions a = (Actions) tag;
+		Home home = getHome();
 		switch (a) {
 		case UPDATE:
-			AppUtils.launchMarketThisApp(_home.mApp);
+			AppUtils.launchMarketThisApp(home.mApp);
 			break;
 		case TO_EDITOR:
-            _home.toEditorFromRoot();
+			home.toEditorFromRoot();
 			break;
 		case TO_GALLERY:
-            _home.toGallery();
+			home.toGallery();
 			break;
 		case TO_TUTORIAL:
-            _home.toHelp();
+			home.toHelp();
 			break;
 		case TO_UPGRADE:
-			if (mPager.getCurrentItem() != Page.UPGRADE.ordinal())
-				mPager.setCurrentItem(Page.UPGRADE.ordinal(), true);
+			// hacky method of getting to the upgrade page whether we're in one
+			// or two column mode
+			int col = getColumnCount() - 1;
+			int colSub = getColumnCount() - 1;
+			if (getPager(col).getCurrentItem() != (Page.UPGRADE.ordinal() - colSub))
+				getPager(col).setCurrentItem((Page.UPGRADE.ordinal() - colSub),
+						true);
 			break;
 		case UPGRADE:
-			AppUtils.launchMarketPro(_home.mApp);
+			AppUtils.launchMarketPro(home.mApp);
 			break;
 		case APP_SHARE:
-        	Intent imgIntent = new Intent(android.content.Intent.ACTION_SEND);  
-        	imgIntent.setType("text/plain");
-        	imgIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.txt_share, 
-        			AppUtils.MARKET_URL_PREFIX + _home.mApp.mAppInfo._packageName));  
-        	startActivity(Intent.createChooser(imgIntent, "Share..."));
+			Intent imgIntent = new Intent(android.content.Intent.ACTION_SEND);
+			imgIntent.setType("text/plain");
+			imgIntent.putExtra(
+					android.content.Intent.EXTRA_TEXT,
+					getString(R.string.txt_share, AppUtils.MARKET_URL_PREFIX
+							+ home.mApp.mAppInfo._packageName));
+			startActivity(Intent.createChooser(imgIntent,
+					getString(R.string.txt_share_short)));
 			break;
 		case APP_RATE:
-			AppUtils.launchMarketThisApp(_home.mApp);
+			AppUtils.launchMarketThisApp(home.mApp);
 			break;
 		case APP_FEEDBACK:
-			AppUtils.launchHelpEmail(_home.mApp);
+			AppUtils.launchHelpEmail(home.mApp);
 			break;
 		case WEBSITE:
-			AppUtils.loadPage(_home.mApp, Home.WEB_PAGE);
+			AppUtils.loadPage(home.mApp, Home.WEB_PAGE);
+			break;
+		case TO_BRAZIL:
+			AppUtils.loadPage(home.mApp, Home.URL_BRAZIL);
 			break;
 		case APP_KSCOPE:
-			AppUtils.launchMarket(_home, "com.resonos.apps.kaleidoscope");
+			AppUtils.launchMarket(home, Home.PCKG_KALEIDO);
 			break;
 		case APP_BGO:
-			AppUtils.loadPage(_home.mApp, "http://download.resonos.com/");
+			AppUtils.loadPage(home.mApp, Home.URL_BGO);
 			break;
 		case APP_JB:
-			AppUtils.launchMarket(_home, "com.resonos.games.jewelblaster");
+			AppUtils.launchMarket(home, Home.PCKG_JB);
 			break;
 		case APP_BBALL:
-			AppUtils.launchMarket(_home, "com.resonos.games.basketball");
+			AppUtils.launchMarket(home, Home.PCKG_BBALL);
 			break;
 		}
 	}
 
 	@Override
 	public boolean onBackPressed() {
-		if (mPager.getCurrentItem() != Page.HOME.ordinal()) {
-			mPager.setCurrentItem(Page.HOME.ordinal(), true);
+		if (getPager(0).getCurrentItem() != Page.HOME.ordinal()) {
+			// technically not proper use of Column API, but it works because
+			// it's all 0's
+			getPager(0).setCurrentItem(Page.HOME.ordinal(), true);
 			return true;
 		}
 		return false;
@@ -335,76 +334,23 @@ public class FragmentMain extends BaseFragment implements ClickListener {
 
 	@Override
 	protected void onCreateOptionsMenu(ArrayList<Action> items) {
-		if (_home != null)
-			if (_home.mApp.isOldVersion())
-				items.add(new Action(getString(R.string.btn_update), 0, true, false, Actions.UPDATE));
+		if (getHome() != null)
+			if (getHome().mApp.isOldVersion())
+				items.add(new Action(getString(R.string.btn_update), 0, true,
+						false, Actions.UPDATE));
 	}
 
 	@Override
 	protected void onOptionsItemSelected(Enum<?> e) {
-		switch ((Actions)e) {
+		switch ((Actions) e) {
 		case UPDATE:
-			AppUtils.launchMarketThisApp(_home.mApp);
-        	break;
+			AppUtils.launchMarketThisApp(getHome().mApp);
+			break;
 		}
 	}
-	
+
 	@Override
 	protected int getAnimation(FragmentAnimation fa, BaseFragment f) {
 		return 0;
-	}
-
-	/**
-	 * This is a simple extension of a PagerAdapter to show {@link UITableView}s
-	 */
-	public class UITableViewAdapter extends PagerAdapter implements TitleProvider {
-		
-		// data
-		private String[] mContent;
-		private Map<Integer, View> mViews = new HashMap<Integer, View>();
-
-		public UITableViewAdapter(int[] pageTitlesRes) {
-			super();
-			mContent = new String[pageTitlesRes.length];
-			for (int i = 0; i < pageTitlesRes.length; i++)
-				mContent[i] = _home.getString(pageTitlesRes[i]);
-		}
-
-		@Override
-		public Object instantiateItem(View collection, final int position) {
-			View layout = createUITableView(Page.values()[position]);
-			mViews.put(position, layout);
-			((ViewPager) collection).addView(layout);
-			return layout;
-		}
-
-		@Override
-		public void destroyItem(View collection, int position, Object view) {
-			((ViewPager) collection).removeView((View) view);
-		}
-
-		@Override
-		public int getItemPosition(Object item) {
-			for (int i = 0; i < getCount(); i++) {
-				if (mViews.get(i) == item)
-					return i;
-			}
-			return -1;
-		}
-
-		@Override
-		public int getCount() {
-			return mContent.length;
-		}
-
-		@Override
-		public String getTitle(int position) {
-			return mContent[position % mContent.length].toUpperCase();
-		}
-
-		@Override
-		public boolean isViewFromObject(View view, Object item) {
-			return view.equals(item);
-		}
 	}
 }

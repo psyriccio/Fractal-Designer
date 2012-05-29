@@ -2,6 +2,8 @@ package com.resonos.apps.fractal.ifs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -9,24 +11,21 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.WazaBe.HoloEverywhere.TextViewHolo;
-import com.resonos.apps.fractal.ifs.R;
 import com.resonos.apps.fractal.ifs.model.ColorScheme;
 import com.resonos.apps.fractal.ifs.model.ColorScheme.PreparedColorScheme;
-import com.resonos.apps.fractal.ifs.model.IFSFractal.RawIFSFractal;
-import com.resonos.apps.fractal.ifs.util.AdapterViewPagerAdapter;
-import com.resonos.apps.fractal.ifs.util.AdapterViewPagerAdapter.AdapterViewPagerAdapterListener;
-import com.resonos.apps.fractal.ifs.util.AdapterViewPagerAdapter.BaseAdapterViewAdapter;
+import com.resonos.apps.fractal.ifs.model.IFSFractal;
 import com.resonos.apps.fractal.ifs.util.IFSFile;
 import com.resonos.apps.fractal.ifs.util.IFSRender;
 import com.resonos.apps.fractal.ifs.util.IFSRender.FractalViewLock;
@@ -36,13 +35,12 @@ import com.resonos.apps.library.App;
 import com.resonos.apps.library.BaseFragment;
 import com.resonos.apps.library.media.ImageLoader;
 import com.resonos.apps.library.media.ImageLoader.ImageGenerator;
-import com.viewpagerindicator.PageIndicator;
-import com.viewpagerindicator.TabPageIndicator;
+import com.resonos.apps.library.tabviewpager.TabViewPagerFragment;
 
-public class FragmentGallery extends BaseFragment implements FractalViewLock, AdapterViewPagerAdapterListener {
+public class FragmentGallery extends TabViewPagerFragment implements FractalViewLock, OnItemClickListener {
 	
 	// contants
-	private static final String STATE_FROM_EDITOR = "fromEditor";
+	private static final String ARG_FROM_EDITOR = "fromEditor";
 	
 	/** implementation for an "empty" item, not currently used */
 	public static final String TITLE_EMPTY = "__empty__";
@@ -50,71 +48,47 @@ public class FragmentGallery extends BaseFragment implements FractalViewLock, Ad
 	/** keys for each HashMap backing a fractal */
 	public static final String DATA_TITLE = "title";
 
-	// context
-	public Home _home;
-
 	// objects
-	private AdapterViewPagerAdapter mAdapter;
-	private ViewPager mPager;
-	private PageIndicator mIndicator;
     public ImageLoader imageLoader;
 	
 	// drawing
     private ColorDrawable colorDrawable;
 	public PreparedColorScheme mColorScheme;
 	
-	// state
-	private boolean mFromEditor = false;
-	
 	// vars
 	private int mColWidth;
-
+	
 	/**
-	 * This constructor is available for the Fragment library's reinstantiation after onSaveInstanceState.
-	 * It shouldn't be used directly.
+	 * Use this method to create this fragment with the proper arguments
+	 * @param fromEditor : true if the editor loaded this gallery
+	 * @return a new FragmentGallery
 	 */
-	public FragmentGallery() {
-		super();
+	public static FragmentGallery create(boolean fromEditor) {
+		Bundle b = new Bundle();
+		b.putBoolean(ARG_FROM_EDITOR, fromEditor);
+		FragmentGallery f = new FragmentGallery();
+		f.setArguments(b);
+		return f;
 	}
 	
-	public FragmentGallery(boolean fromEditor) {
-		super();
-		mFromEditor = fromEditor;
-	}
-
-	@Override
-	public void onCreate(Bundle icicle) {
-		super.onCreate(icicle);
-		if (icicle != null) {
-			mFromEditor = icicle.getBoolean(STATE_FROM_EDITOR, false);
-		}
+	/**
+	 * Convenience for getting our parent activity
+	 * @return a {@link Home} object
+	 */
+	public Home getHome() {
+		return (Home)getActivity();
 	}
 	
 	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-		outState.putBoolean(STATE_FROM_EDITOR, mFromEditor);
-	}
-
-	@Override
-	public View onCreateView(LayoutInflater l, ViewGroup container,
-			Bundle icicle) {
-		_home = (Home) getActivity();
-		View root = l.inflate(R.layout.fragment_gallery, null);
-		mAdapter = new AdapterViewPagerAdapter(_home.getResources(), IFSFile.IFS_CAT_RES_NAMES, this);
-		mPager = (ViewPager) root.findViewById(R.id.pager);
-		mPager.setAdapter(mAdapter);
-		mIndicator = (TabPageIndicator) root.findViewById(R.id.indicator);
-		mIndicator.setViewPager(mPager);
-		return root;
+	protected int[] getData() {
+		return IFSFile.IFS_CAT_RES_NAMES;
 	}
 	
 	@Override
 	public void onActivityCreated(Bundle icicle) {
 		super.onCreate(icicle);
-		_home = (Home) getActivity();
 		updateColors();
-		imageLoader = new ImageLoader(_home.mApp, colorDrawable);
+		imageLoader = new ImageLoader(getHome().mApp, colorDrawable);
 	}
 	
 	@Override
@@ -132,19 +106,19 @@ public class FragmentGallery extends BaseFragment implements FractalViewLock, Ad
 	
 	/** update the colors to be used in this gallery */
 	private synchronized void updateColors() {
-		ColorScheme cm = _home.mGallery.getColorSchemeByName(_home.mSelColors);
+		ColorScheme cm = getHome().mGallery.getColorSchemeByName(getHome().mSelColors);
 		mColorScheme = cm.prepareGradient(IFSRenderManager.PREVIEW_COLOR_STEPS);
 		colorDrawable = new ColorDrawable(mColorScheme.mBGColor);
 	}
 
 	@Override
-	public AdapterView<?> onCreateAdapterView(int i) {
-		GridView gv = new GridView(_home);
-		ArrayList<HashMap<String, String>> map = new ArrayList<HashMap<String, String>>();
+	protected View getView(int i) {
+		GridView gv = new GridView(getHome());
+		List<Map<String, String>> map = new ArrayList<Map<String, String>>();
 		IFSAdapter adapter = new IFSAdapter(i, gv, map);
 		gv.setAdapter(adapter);
 		gv.setSelector(R.color.empty);
-		gv.setCacheColorHint(_home.getResources().getColor(R.color.gallery_bg));
+		gv.setCacheColorHint(getHome().getResources().getColor(R.color.gallery_bg));
 		int n = App.SCREEN_WIDTH > App.SCREEN_HEIGHT ? 3 : 2;
 		if (App.SCREEN_SIZE == Configuration.SCREENLAYOUT_SIZE_XLARGE)
 			n++;
@@ -153,9 +127,10 @@ public class FragmentGallery extends BaseFragment implements FractalViewLock, Ad
 		gv.setVerticalSpacing((int)(0.5 + 1 * App.DENSITY));
 		gv.setHorizontalSpacing((int)(0.5 + 1 * App.DENSITY));
 		gv.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
-		TextViewHolo etv = new TextViewHolo(_home, null);
-		etv.setText(_home.hasPro() ? R.string.txt_gallery_saved_empty_pro : R.string.txt_gallery_saved_empty);
+		TextViewHolo etv = new TextViewHolo(getHome(), null);
+		etv.setText(getHome().hasPro() ? R.string.txt_gallery_saved_empty_pro : R.string.txt_gallery_saved_empty);
 		gv.setEmptyView(etv);
+		gv.setOnItemClickListener(this);
 
 		addItemsFromCategory(adapter, i);
 		return gv;
@@ -169,8 +144,8 @@ public class FragmentGallery extends BaseFragment implements FractalViewLock, Ad
 	private void addItemsFromCategory(IFSAdapter a, int index) {
 		a._map.clear();
 		String name;
-		for (int i = 0; i < _home.mGallery.mFractals.size(); i++) {
-			name = _home.mGallery.mFractals.get(i)._name;
+		for (int i = 0; i < getHome().mGallery.mFractals.size(); i++) {
+			name = getHome().mGallery.mFractals.get(i)._name;
 			int cat = IFSFile.getCatFromFileName(name);
 			String subname = IFSFile.getNameFromFileName(name);
 			if (cat == index)
@@ -184,85 +159,116 @@ public class FragmentGallery extends BaseFragment implements FractalViewLock, Ad
 	 * @param title : the name of the IFS
 	 * @param mapIFS : the data to add it to.
 	 */
-	public void addIFS(String title, ArrayList<HashMap<String, String>> mapIFS) {
-		HashMap<String, String> map = new HashMap<String, String>();
+	public void addIFS(String title, List<Map<String, String>> mapIFS) {
+		Map<String, String> map = new HashMap<String, String>();
 		map.put(DATA_TITLE, title);
 		mapIFS.add(map);
 	}
 
 	@Override
-	public void onItemClick(BaseAdapterViewAdapter adapter, AdapterView<?> lv, View v, int listIndex, int position) {
-		IFSAdapter a = (IFSAdapter)adapter;
-		String title = a._map.get(position).get(DATA_TITLE);
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		if (getHome() == null)
+			return;
+		IFSAdapter a = (IFSAdapter)parent.getAdapter();
+		String title = a.getItemData(position).get(DATA_TITLE);
 		if (!title.equals(TITLE_EMPTY)) {
-			if (mFromEditor) {
-				_home.onBackPressed();
-				_home.fE.loadIFS(IFSFile.generateIFSFileName(a._cat, title));
+			if (getArguments().getBoolean(ARG_FROM_EDITOR) && getHome().fE != null) {
+				getHome().backOneFragment();
+				getHome().fE.loadIFS(IFSFile.generateIFSFileName(a._cat, title));
 			} else {
-				_home.toEditorFromLevel1();
-				_home.fE.loadIFS(IFSFile.generateIFSFileName(a._cat, title));
+				getHome().toEditorFromLevel1();
+				getHome().fE.loadIFS(IFSFile.generateIFSFileName(a._cat, title));
 			}
+		}
+	}
+
+	/**
+	 * Clear the gallery cache
+	 */
+	public void clearCache() {
+		if (imageLoader != null)
+			imageLoader.clearCache();
+	}
+	
+	private static class ViewHolder {
+		private View image;
+		private TextView text;
+		public ViewHolder(View v) {
+			image = v.findViewById(R.id.icon);
+			text = (TextView)v.findViewById(R.id.itemTitle);
 		}
 	}
 
 	/**
 	 * An adapter for adapter views, in this case,
 	 *  an adapter to show GridViews of loadable fractals.
-	 * @author Chris
 	 */
-	class IFSAdapter extends BaseAdapterViewAdapter implements ImageGenerator {
+	class IFSAdapter extends BaseAdapter implements ImageGenerator {
 		public static final String IMGEN_TAG = "ifsPreviewGen";
-		private ArrayList<HashMap<String, String>> _map;
+		private List<Map<String, String>> _map;
 		private int _cat;
 
-		public IFSAdapter(int cat, GridView gv, ArrayList<HashMap<String, String>> data) {
-			super(gv);
+		public IFSAdapter(int cat, GridView gv, List<Map<String, String>> data) {
+			super();
 			_cat = cat;
 			_map = data;
+		}
+
+		/**
+		 * accessor for a single item's data
+		 * @param position : item index
+		 * @return a String-String map of keys and values
+		 */
+		public Map<String, String> getItemData(int position) {
+			return _map.get(position);
 		}
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View v = convertView;
+			ViewHolder vh;
 			if (v == null) {
-				LayoutInflater vi = (LayoutInflater) _home
+				LayoutInflater vi = (LayoutInflater) getHome()
 						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				v = vi.inflate(R.layout.list_item_ifs, null);
-			}
+				vh = new ViewHolder(v);
+				v.setTag(vh);
+			} else
+				vh = (ViewHolder)v.getTag();
 			RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, mColWidth);
-
-	        View image = v.findViewById(R.id.icon);
-	        TextView text = (TextView)v.findViewById(R.id.itemTitle);
 	        
-	        image.setLayoutParams(lp);
+	        vh.image.setLayoutParams(lp);
 
 			if (_map.get(position).get(DATA_TITLE).equals(TITLE_EMPTY)) {
-				text.setVisibility(View.INVISIBLE);
+				vh.text.setVisibility(View.INVISIBLE);
 			} else {
-				text.setVisibility(View.VISIBLE);
-				text.setText(_map.get(position).get(DATA_TITLE));
-				image.setBackgroundDrawable(colorDrawable);
+				vh.text.setVisibility(View.VISIBLE);
+				vh.text.setText(_map.get(position).get(DATA_TITLE));
+				vh.image.setBackgroundDrawable(colorDrawable);
 				imageLoader.DisplayImageGen(this, IFSFile.generateIFSFileName(_cat,
-						_map.get(position).get(DATA_TITLE)), image, IFSRenderManager.PREVIEW_WIDTH);
+						_map.get(position).get(DATA_TITLE)), vh.image, IFSRenderManager.PREVIEW_WIDTH);
 			}
 			return v;
 		}
 
+		@Override
 	    public int getCount() {
 	        return _map.size();
 	    }
 
+		@Override
 	    public Object getItem(int position) {
 	        return position;
 	    }
 
+		@Override
 	    public long getItemId(int position) {
 	        return position;
 	    }
 
 		@Override
 		public Bitmap generateImage(String param) {
-			RawIFSFractal ifs = _home.mGallery.getFractalByName(param).calculateRaw();
+			IFSFractal ifs = getHome().mGallery.getFractalByName(param);
 			IFSRenderManager manager = new IFSRenderManager(FragmentGallery.this, ifs) {
 				public void onCompleteRender(boolean error, boolean oome) { }
 			};
@@ -272,6 +278,7 @@ public class FragmentGallery extends BaseFragment implements FractalViewLock, Ad
 			return bmp;
 		}
 
+		@Override
 		public String getTag() {
 			return IMGEN_TAG;
 		}
@@ -302,8 +309,18 @@ public class FragmentGallery extends BaseFragment implements FractalViewLock, Ad
 		return getDefaultAnimationSlideFromRight(fa);
 	}
 
-	public void clearCache() {
-		if (imageLoader != null)
-			imageLoader.clearCache();
+	@Override
+	protected int[] getColumnData() {
+		return null;
+	}
+
+	@Override
+	protected int[] getIconData() {
+		return null;
+	}
+
+	@Override
+	protected boolean[] getVisibleData() {
+		return null;
 	}
 }

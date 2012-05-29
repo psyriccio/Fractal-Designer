@@ -33,7 +33,7 @@ public class ToolBarRender extends ToolBar {
 	/** initialize the toolbar */
 	public void init(FragmentRender f) {
 		_f = f;
-		super.init(_f._home, ToolBar.Param.STYLE_ACTION_MODE, ToolBar.Param.STYLE_SPLIT);
+		super.init(_f.getHome(), ToolBar.Param.STYLE_ACTION_MODE, ToolBar.Param.STYLE_SPLIT);
 	}
 	
 	/** the toolbar's actions */

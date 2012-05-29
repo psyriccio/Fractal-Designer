@@ -22,10 +22,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
-import br.com.dina.ui.BasicItem;
-import br.com.dina.ui.UITableView;
-import br.com.dina.ui.UITableView.ClickListener;
-import br.com.dina.ui.ViewItem;
 
 import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
@@ -40,86 +36,71 @@ import com.resonos.apps.fractal.ifs.view.GradientView.OnRemoveListener;
 import com.resonos.apps.library.Action;
 import com.resonos.apps.library.App;
 import com.resonos.apps.library.BaseFragment;
-import com.resonos.apps.library.util.AppUtils;
+import com.resonos.apps.library.widget.FormBuilder;
+import com.resonos.apps.library.widget.FormElement;
+import com.resonos.apps.library.widget.ListFormBuilder;
+import com.resonos.apps.library.widget.ListFormBuilder.OnFormItemClickListener;
 
 public class FragmentGradientEditor extends BaseFragment implements
-					ClickListener, OnRemoveListener {
+				OnFormItemClickListener, OnRemoveListener {
 	
 	// constants
-	public static final String USER_GRADIENT_PREFIX = "__user",
-		STATE_COLORSCHEME_NAME = "colorSchemeName", STATE_COLORS_FRAGMENT = "colorsFragment",
-		STATE_COLORSCHEME = "colorScheme", STATE_SEL = "sel", STATE_SUB_SEL = "subSel";
-
-	// context
-	public Home _home;
-	private FragmentGradientList fColors;
+	public static final String USER_GRADIENT_PREFIX = "__user";
+	private static final String STATE_COLORSCHEME_NAME = "colorSchemeName",
+		STATE_SEL = "sel", STATE_SUB_SEL = "subSel";
 	
     // state
 	private String mColorMapName;
     private ColorScheme mColorMap;
+    
+    // vars
+    private ArrayList<Integer> mGradientIndex = new ArrayList<Integer>();
 
 	// views
     private View mRoot;
     private RelativeLayout mContainer;
-    private UITableView mUITableFG, uiTableBG;
+    private FormBuilder mainPage;
     private ScrollView mRootView;
 
     // objects
     private Animation mFadeInAnimation;
     private Animation mFadeOutAnimation;
     
-    // state
+    // action mode
     private ActionMode mActionMode;
     private GradientActionModeCallBack mActionModeCallback;
-
-	/**
-	 * This constructor is available for the Fragment library's reinstantiation after onSaveInstanceState.
-	 * It shouldn't be used directly.
-	 */
-	public FragmentGradientEditor() {
-		super();
-	}
-	
-	/**
-	 * Create the color scheme editor fragment
-	 * @param f : the parent color scheme chooser fragment
-	 */
-	public FragmentGradientEditor(FragmentGradientList f) {
-		super();
-		fColors = f;
-	}
 
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		AppUtils.putFragment(_home, outState, this, STATE_COLORS_FRAGMENT, fColors);
 		outState.putString(STATE_COLORSCHEME_NAME, mColorMapName);
 		outState.putInt(STATE_SEL, (mActionModeCallback == null) ? -1 : mActionModeCallback.getIndex());
 		outState.putInt(STATE_SUB_SEL, (mActionModeCallback == null) ? -1 : mActionModeCallback.getSel());
-		if (mColorMap != null)
-			outState.putString(STATE_COLORSCHEME, mColorMap.save());
 	}
 
 	@Override
 	public void onActivityCreated(Bundle inState) {
 		super.onActivityCreated(inState);
 	}
+
+	/** get the host activity as its derived class */
+	public Home getHome() {
+		return (Home)getActivity();
+	}
 	
 	@Override
 	public View onCreateView(LayoutInflater l, ViewGroup container, Bundle inState) {
 		mRoot = l.inflate(R.layout.fragment_gradient_editor, null);
-        _home = (Home)getActivity();
 
-        mFadeInAnimation = AnimationUtils.loadAnimation(_home, android.R.anim.fade_in);
-        mFadeOutAnimation = AnimationUtils.loadAnimation(_home, android.R.anim.fade_out);
+        mFadeInAnimation = AnimationUtils.loadAnimation(getHome(), android.R.anim.fade_in);
+        mFadeOutAnimation = AnimationUtils.loadAnimation(getHome(), android.R.anim.fade_out);
         
         int sel = -1, subSel = -1;
 		if (inState != null) {
-			fColors = (FragmentGradientList)AppUtils.getFragment(_home, inState, this, STATE_COLORS_FRAGMENT);
 			mColorMapName = inState.getString(STATE_COLORSCHEME_NAME);
 			sel = inState.getInt(STATE_SEL, -1);
 			subSel = inState.getInt(STATE_SUB_SEL, -1);
-			mColorMap = ColorScheme.loadFromString(_home, inState.getString(STATE_COLORSCHEME));
+			mColorMap = getHome().mGallery.getColorSchemeByName(mColorMapName);
 		}
 
         mContainer = (RelativeLayout)mRoot.findViewById(R.id.gradientContainer);
@@ -129,17 +110,14 @@ public class FragmentGradientEditor extends BaseFragment implements
 				App.SCREEN_WIDTH > maxWidth ? maxWidth : LayoutParams.MATCH_PARENT,
 						LayoutParams.WRAP_CONTENT);
 
-        mRootView = new ScrollView(_home);
+        mRootView = new ScrollView(getHome());
         mRootView.setFillViewport(true);
-		LinearLayout ll = new LinearLayout(_home);
+		LinearLayout ll = new LinearLayout(getHome());
 		ll.setGravity(Gravity.CENTER);
 		ll.setOrientation(LinearLayout.VERTICAL);
 		mRootView.addView(ll);
-		uiTableBG = new UITableView(_home, null);
-		ll.addView(uiTableBG, lllp);
-		mUITableFG = new UITableView(_home, null);
-		ll.addView(mUITableFG, lllp);
-		setupMainBlock();
+        mainPage = new ListFormBuilder(getActivity(), null, this);
+		ll.addView(setupMainBlock(), lllp);
 
         mContainer.addView(mRootView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
@@ -164,27 +142,29 @@ public class FragmentGradientEditor extends BaseFragment implements
 	/**
 	 * Set up the UI.
 	 */
-	private void setupMainBlock() {
+	private View setupMainBlock() {
 		int actionsize = App.inDP(32);
+        FormBuilder b = mainPage;
 		
-		// neat idea...but it didn't look too good
-		// mRootView.setBackgroundColor(mColorMap.getBGColor());
+		b.clear();
+		b.newSection("Background");
+		b.newItem().title("Background Color").onClick(Actions.EDIT_BGCOLOR)
+			.drawable(new BitmapDrawable(getHome().getResources(),
+					generateColorBox(mColorMap.getBGColor(), actionsize)))
+			.textColor(Color.BLACK);
 		
-		uiTableBG.clear();
-		uiTableBG.addBasicItem(new BasicItem("Background Color").setTag(Actions.EDIT_BGCOLOR).setRealDrawable(new BitmapDrawable(_home.getResources(), generateColorBox(mColorMap.getBGColor(), actionsize))));
-		uiTableBG.setClickListener(this);
-		uiTableBG.commit();
-		
-		mUITableFG.clear();
-		mUITableFG.addBasicItem(new BasicItem("Foreground Color Gradients").setGravity(Gravity.CENTER).setClickable(false));
+		b.newSection("Foreground Color Gradients");
+		mGradientIndex.clear();
 		for (int i = 0; i < mColorMap.getGradientCount(); i++) {
 			GradientView gv = getGradientView(i);
-			ViewItem v = new ViewItem(gv.getMasterView()).setClickable(true).setTag(Actions.SELECT_GRADIENT);
-			mUITableFG.addViewItem(v);
+			FormElement fe = b.newItem().view(gv.getMasterView())
+					.onClick(Actions.SELECT_GRADIENT).textColor(Color.BLACK);
+			mGradientIndex.add(fe.getData().mIndex);
 		}
-		mUITableFG.addBasicItem(new BasicItem(R.drawable.ic_action_new, "Add", "Create another foreground gradient").setIconColor(Color.BLACK).setTag(Actions.ADD_GRADIENT));
-		mUITableFG.setClickListener(this);
-		mUITableFG.commit();
+		b.newItem().icon(R.drawable.ic_action_new).text("Add", "Create another foreground gradient")
+			.onClick(Actions.ADD_GRADIENT).textColor(Color.BLACK).drawColor(Color.BLACK);
+		
+		return mainPage.finish();
 	}
 
 	/**
@@ -224,7 +204,7 @@ public class FragmentGradientEditor extends BaseFragment implements
 	}
 
 	@Override
-	public void onClick(UITableView tv, Enum<?> tag, int position) {
+	public void onClick(Enum<?> tag, int pos, FormElement fe) {
 		Actions a = (Actions)tag;
 		switch (a) {
 		case ADD_GRADIENT:
@@ -235,7 +215,7 @@ public class FragmentGradientEditor extends BaseFragment implements
 			invalidateEditor();
 			break;
 		case EDIT_BGCOLOR:
-			ColorPickerDialog picker = new ColorPickerDialog(_home, mColorMap.getBGColor());
+			ColorPickerDialog picker = new ColorPickerDialog(getHome(), mColorMap.getBGColor());
 			picker.setOnColorChangedListener(new OnColorChangedListener() {
 				public void onColorChanged(int color) {
 		        	mColorMap.setBGColor(color);
@@ -247,8 +227,9 @@ public class FragmentGradientEditor extends BaseFragment implements
 			picker.show();
 			break;
 		case SELECT_GRADIENT:
-			int sel = position - 1;
-			editGradient(sel);
+			int sel = mGradientIndex.indexOf(pos);
+			if (sel >= 0)
+				editGradient(sel);
 			break;
 		}
 	}
@@ -259,7 +240,7 @@ public class FragmentGradientEditor extends BaseFragment implements
 	 */
 	private void editGradient(int gradient) {
 		mActionModeCallback = new GradientActionModeCallBack(mColorMap, gradient);
-		mActionMode = _home.startActionMode(mActionModeCallback);
+		mActionMode = getHome().startActionMode(mActionModeCallback);
 		mActionModeCallback.setActionMode(mActionMode);
     	invalidateEditor();
 	}
@@ -269,61 +250,61 @@ public class FragmentGradientEditor extends BaseFragment implements
 	 */
 	private void invalidateEditor() {
 		setupMainBlock();
-		_home.invalidateOptionsMenu();
+		getHome().invalidateOptionsMenu();
 	}
 
 	/**
 	 * Load a gradient from the Gallery
 	 * @param gal : the {@link Gallery} object
 	 * @param name : the name of the ColorMap
+	 * @return true if we are changing this to be edited as a new gradient (built in gradient behavior)
 	 */
-	public void setGradient(Gallery gal, String name) {
+	public boolean setGradient(Home home, Gallery gal, String name) {
         mColorMapName = name;
         if (mColorMapName.equals(FragmentGradientList.NEW_GRADIENT))
         	mColorMap = new ColorScheme();
         else
         	mColorMap = gal.getColorSchemeByName(mColorMapName);
         if (!mColorMapName.startsWith(USER_GRADIENT_PREFIX)) { // editing a sample CS = making a new CS
-        	if (fColors != null)
-        		fColors.mEditing = FragmentGradientList.NEW_GRADIENT;
         	mColorMapName = FragmentGradientList.NEW_GRADIENT;
         	mColorMap = new ColorScheme(mColorMap);
+        	save(home);
+        	return true;
         }
+    	save(home);
+        return false;
 	}
 	
 	@Override
-	public void onResume() {
-		super.onResume();
+	public void onPause() {
+		if (getHome() != null)
+			save(getHome());
+		super.onPause();
 	}
 
 	/**
 	 * Save any changes to this gradient.
 	 */
-	public void save() {
-		String t = null;
+	public void save(Home home) {
         if (mColorMapName.equals(FragmentGradientList.NEW_GRADIENT)) {
 			int i = 0;
-			while (_home.mGallery.getColorSchemeByName(USER_GRADIENT_PREFIX+i) != null) {
+			while (home.mGallery.getColorSchemeByName(USER_GRADIENT_PREFIX+i) != null) {
 				i++;
 			}
-			t = USER_GRADIENT_PREFIX+i;
+			mColorMapName = USER_GRADIENT_PREFIX+i;
         }
-        // this allows us to save a new CS, and edit an old CS without readding it
-        // also, if the user edits a sample gradient, it will be saved as a new one!
-        if (!_home.getUserGallery().hasColorScheme(mColorMap)) {
-			ColorScheme cs = new ColorScheme(mColorMap);
-			if (t != null)
-				cs._name = t;
-			_home.getUserGallery().mColorSchemes.add(cs);
+        mColorMap._name= mColorMapName;
+        if (!home.getUserGallery().hasColorScheme(mColorMap)) {
+			home.getUserGallery().mColorSchemes.add(mColorMap);
         }
-        _home.getUserGallery().save(_home);
-        _home.rebuildUnifiedGallery();
-        fColors.gradientListUpdated();
+        home.getUserGallery().save(home);
+        home.rebuildUnifiedGallery();
+        home.updateGradientList(true);
 	}
 
 	@Override
 	public boolean onBackPressed() {
-		save();
+		save(getHome());
 		return false;
 	}
 	
@@ -358,7 +339,8 @@ public class FragmentGradientEditor extends BaseFragment implements
     	 * @param id : the id of the KeyColor to select
     	 */
     	public void setSel(int id) {
-    		gv.mSelKey = gv.getColors().getKeyById(id);
+    		mKeyColor = gv.getColors().getKeyById(id);
+    		gv.setSelKey(mKeyColor);
 			_am.invalidate();
     	}
     	
@@ -397,7 +379,7 @@ public class FragmentGradientEditor extends BaseFragment implements
         	menu.clear();
     		if (mKeyColor != null) {
 	            menu.add(Menu.NONE, Actions.EDIT_COLOR.ordinal(), Menu.NONE, R.string.btn_change)
-	                .setIcon(new BitmapDrawable(_home.getResources(),
+	                .setIcon(new BitmapDrawable(getHome().getResources(),
 	                		generateColorBox(mKeyColor.getColor(), App.inDP(32))))
 	                .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS|MenuItem.SHOW_AS_ACTION_WITH_TEXT);
     			if (!mKeyColor.isFixed())
@@ -431,8 +413,8 @@ public class FragmentGradientEditor extends BaseFragment implements
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         	if (item.getItemId() == Actions.EDIT_COLOR.ordinal()) {
-    			if (gv != null && gv.mSelKey != null) {
-    				ColorPickerDialog picker = new ColorPickerDialog(_home,
+    			if (gv != null && gv.getSelKey() != null) {
+    				ColorPickerDialog picker = new ColorPickerDialog(getHome(),
     						mKeyColor.getColor());
     				picker.setOnColorChangedListener(new OnColorChangedListener() {
     					public void onColorChanged(int color) {
@@ -444,9 +426,10 @@ public class FragmentGradientEditor extends BaseFragment implements
     				picker.show();
     			}
         	} else if (item.getItemId() == Actions.DELETE_COLOR.ordinal()) {
-    			if (gv != null && gv.mSelKey != null) {
-    				mColorMap.getGradient(gv.getPosition()).delKeyById(gv.mSelKey.getID());
-    		    	gv.mSelKey = null;
+    			if (gv != null && gv.getSelKey() != null) {
+    				mColorMap.getGradient(gv.getPosition()).delKeyById(gv.getSelKey().getID());
+    		    	gv.setSelKey(null);
+    		    	mKeyColor = null;
 					gv.invalidate();
 					_am.invalidate();
     			}

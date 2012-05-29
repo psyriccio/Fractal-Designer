@@ -3,9 +3,7 @@ package com.resonos.apps.fractal.ifs;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -16,56 +14,56 @@ import android.view.ViewGroup;
 import android.view.WindowManager.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
-import com.resonos.apps.fractal.ifs.R;
 import com.resonos.apps.fractal.ifs.model.ColorScheme;
 import com.resonos.apps.fractal.ifs.view.ToolBarGradientList;
 import com.resonos.apps.library.Action;
 import com.resonos.apps.library.App;
 import com.resonos.apps.library.BaseFragment;
+import com.resonos.apps.library.tabviewpager.TabViewPagerFragment;
 import com.resonos.apps.library.util.AppUtils;
-import com.resonos.apps.library.util.M;
 
 /** A fragment that allows the user to select from a list of color schemes */
-public class FragmentGradientList extends BaseFragment implements
-		OnItemClickListener {
+public class FragmentGradientList extends TabViewPagerFragment implements
+		OnItemClickListener, OnItemLongClickListener {
 
 	// constants
 	static final String NEW_GRADIENT = "__new__";
 	private static final String GRADIENT_TITLE = "title";
-	private static final String STATE_SCROLL_POS = "scrollPosition", STATE_EDIT = "editing", STATE_EDIT_INDEX = "editIndex";
-	private static final String STATE_RENDER_FRAGMENT = "renderFragment";
+	private static final String STATE_SCROLL_POS = "scrollPosition", STATE_EDIT_INDEX = "editIndex";
+	private static final String STATE_RENDER_FRAGMENT = "renderFragment", STATE_SCROLLUSER = "scrollToUser";
+	public static final int[] COLOR_CAT_RES_NAMES = new int[] {
+		R.string.txt_color_def,
+		R.string.txt_color_user};
 
-	// used for the SimpleAdapter
-	private static final String[] from = new String[] { "icon" };
-	private static final int[] to = new int[] { R.id.icon };
+	private static final int VIEW_USER = 1;//, VIEW_PRESETS = 0;
+	private static final int POS_END = -2;
+	private static final int POS_NONE = -1;
 
 	// context
 	public Home _home;
 
 	// objects
-	private RelativeLayout mContainer;
 	private ToolBarGradientList mToolBar;
-	private ListView mListView;
-	private SimpleAdapter adapterHistory;
 
 	// data
-	private ArrayList<HashMap<String, String>> mapIFS;
-	private Map<Integer, WeakReference<Bitmap>> mImages;
+	public ArrayList<ColorScheme> csPresets = new ArrayList<ColorScheme>();
+	public ArrayList<ColorScheme> csCustom = new ArrayList<ColorScheme>();
+	private Map<String, WeakReference<Bitmap>> mImages;
 
 	// vars
-	String mEditing = "";
 	private int mScrollPos = 0;
 	private int mPosEditing = -1;
 	boolean usesSelectionToSaveListViewPosition = false;
 	
 	// state
 	private FragmentRender fR;
+	private int mScrollToOnUserList = POS_NONE;
 
 	/**
 	 * This constructor is available for the Fragment library's reinstantiation after onSaveInstanceState.
@@ -82,77 +80,134 @@ public class FragmentGradientList extends BaseFragment implements
 	public FragmentGradientList(FragmentRender fragmentRender) {
 		super();
 		fR = fragmentRender;
-		_home = fR._home;
+		_home = fR.getHome();
+	}
+
+	@Override
+	protected int[] getData() {
+		return COLOR_CAT_RES_NAMES;
+	}
+
+	@Override
+	protected View getView(int position) {
+		ListView mListView = new ListView(_home);
+		mListView.setBackgroundResource(R.drawable.white);
+		ArrayList<ColorScheme> cs = position == VIEW_USER ? csCustom : csPresets;
+		ArrayList<HashMap<String, String>> mapIFS = new ArrayList<HashMap<String, String>>();
+		ColorAdapter adapter = new ColorAdapter(_home, cs, mapIFS);
+		mListView.setAdapter(adapter);
+		mListView.setSelector(R.color.empty);
+		mListView.setDividerHeight(0);
+		mListView.setOnItemClickListener(this);
+		mListView.setCacheColorHint(0);
+
+		mImages = new HashMap<String, WeakReference<Bitmap>>();
+
+		mListView.setOnItemLongClickListener(this);
+		
+		return mListView;
+	}
+
+	private void updateAdapterData(ColorAdapter adapter,
+			ArrayList<ColorScheme> cs, int position) {
+		adapter.getData().clear();
+		
+		for (int i = 0; i < cs.size(); i++)
+			addColor(adapter, cs.get(i), position == VIEW_USER);
+		adapter.notifyDataSetChanged();
+	}
+
+	/**
+	 * Add a color scheme to the list.
+	 * @param adapter 
+	 * @param colorScheme : the {@link ColorScheme} object
+	 */
+	private void addColor(ColorAdapter adapter, ColorScheme colorScheme, boolean userGradients) {
+		boolean isUser = colorScheme._name.startsWith(FragmentGradientEditor.USER_GRADIENT_PREFIX);
+		if (isUser ^ userGradients)
+			return;
+		HashMap<String, String> map = new HashMap<String, String>();
+		map.put(GRADIENT_TITLE, colorScheme._name);
+		adapter.getData().add(map);
+	}
+	
+	@Override
+	public void onShowView(int position, Object view) {
+		super.onShowView(position, view);
+		updateGradients();
+		final ListView lv = ((ListView)view);
+		updateAdapterData((ColorAdapter)lv.getAdapter(), _home.mGallery.mColorSchemes, position);
+		
+		if (position == VIEW_USER && mScrollToOnUserList != POS_NONE) {
+			lv.post(new Runnable() {
+				public void run() {
+					try {
+						lv.setSelection(mScrollToOnUserList == POS_END
+								? (lv.getCount() - 1) : mScrollToOnUserList);
+					} catch (Exception ex) {
+						// no worries
+					}
+				}
+			});
+		}
 	}
 	
 	@Override
 	public void onCreate(Bundle inState) {
 		super.onCreate(inState);
+		_home = (Home) getActivity();
+		
+		updateGradients();
+		
 		if (inState != null) {
 			mScrollPos = inState.getInt(STATE_SCROLL_POS, 0);
-			mEditing = inState.getString(STATE_EDIT);
-			if (mEditing == null)
-				mEditing = ""; // because we use equals method, it cannot be null
 			mPosEditing = inState.getInt(STATE_EDIT_INDEX, -1);
+			mScrollToOnUserList = inState.getInt(STATE_SCROLLUSER, POS_NONE);
+			_home.setGradientEditing("");
 		}
+	}
+	
+	private void updateGradients() {
+		csPresets.clear();
+		csCustom.clear();
+		for (int i = 0; i < _home.mGallery.mColorSchemes.size(); i++) {
+			ColorScheme cs = _home.mGallery.mColorSchemes.get(i);
+			if (cs._name.startsWith(FragmentGradientEditor.USER_GRADIENT_PREFIX))
+				csCustom.add(cs);
+			else
+				csPresets.add(cs);
+		}
+	}
+
+	@Override
+	public boolean onItemLongClick(final AdapterView<?> av, View v,
+			int position, long id) {
+		if (!_home.hasPro()) {
+			_home.mApp.tooltipToast(R.string.txt_upgrade_need_color_edit);
+			return false;
+		}
+
+		ColorAdapter ca = (ColorAdapter) av.getAdapter();
+		_home.setGradientEditing(ca.getData().get(position).get(GRADIENT_TITLE));
+		mScrollToOnUserList = mPosEditing = position;
+		toGradientEditor(ca.getData().get(position).get(GRADIENT_TITLE));
+		if (!ca.getData().get(position).get(GRADIENT_TITLE)
+				.startsWith(FragmentGradientEditor.USER_GRADIENT_PREFIX)) {
+			usesSelectionToSaveListViewPosition = true;
+			mScrollToOnUserList = POS_END;
+			this.getPager(0).setCurrentItem(VIEW_USER);
+		}
+		return true;
 	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		View root = inflater.inflate(R.layout.fragment_gradient_list, null);
-		_home = (Home) getActivity();
+		View root = super.onCreateView(inflater, container, savedInstanceState);
 
-		if (mListView == null) {
-			mListView = new ListView(_home);
-
-			mListView.setBackgroundResource(R.drawable.white);
-	
-			mapIFS = new ArrayList<HashMap<String, String>>();
-			adapterHistory = new ColorAdapter(_home, mapIFS,
-					R.layout.list_item_color, from, to);
-			mListView.setAdapter(adapterHistory);
-	
-			// this.setOnItemClickListener(a);
-			mListView.setSelector(R.color.empty);
-			mListView.setDividerHeight(0);
-			mListView.setOnItemClickListener(this);
-			mListView.setCacheColorHint(0);
-	
-			mImages = new HashMap<Integer, WeakReference<Bitmap>>();
-	
-			mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-				@Override
-				public boolean onItemLongClick(AdapterView<?> av, View v,
-						int position, long id) {
-					if (!_home.hasPro()) {
-						_home.mApp.tooltipToast(R.string.txt_upgrade_need_color_edit);
-						return false;
-					}
-						
-					mEditing = mapIFS.get(position).get(GRADIENT_TITLE);
-					mPosEditing = position;
-					toGradientEditor(mapIFS.get(position).get(GRADIENT_TITLE));
-					if (!mapIFS.get(position).get(GRADIENT_TITLE).startsWith(FragmentGradientEditor.USER_GRADIENT_PREFIX)) {
-						mListView.setSelection(mListView.getCount()-1);
-						usesSelectionToSaveListViewPosition = true;
-					}
-					return true;
-				}
-			});
-		}
-		
-		// put items in
-		for (int i = 0; i < _home.mGallery.mColorSchemes.size(); i++)
-			addColor(_home.mGallery.mColorSchemes.get(i));
-		adapterHistory.notifyDataSetChanged();
-		getTaskQueue().empty(); // remove the possible task to update the color list
-
-		mContainer = (RelativeLayout) root.findViewById(R.id.container);
-		mContainer.addView(mListView, new LayoutParams(
-				LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-
-		mToolBar = (ToolBarGradientList) root.findViewById(R.id.toolbar);
+		mToolBar = new ToolBarGradientList(getActivity());
+		((ViewGroup)getActivity().findViewById(R.id.ad_container)).addView(mToolBar,
+				new ViewGroup.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		mToolBar.init(this);
 
 		return root;
@@ -161,11 +216,14 @@ public class FragmentGradientList extends BaseFragment implements
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		AppUtils.putFragment(_home, outState, this, STATE_RENDER_FRAGMENT, fR);
-		outState.putInt(STATE_SCROLL_POS, mListView == null ? mScrollPos :
-			(usesSelectionToSaveListViewPosition ? mListView.getSelectedItemPosition() : mListView.getFirstVisiblePosition()));
+		try {
+			AdapterView<?> av = (AdapterView<?>) findView(getPager(0).getCurrentItem());
+			outState.putInt(STATE_SCROLL_POS, findView(getPager(0).getCurrentItem()) == null ? mScrollPos :
+				(usesSelectionToSaveListViewPosition ? av.getSelectedItemPosition() : av.getFirstVisiblePosition()));
+		} catch (Exception ex) {}
 		usesSelectionToSaveListViewPosition = false;
-		outState.putString(STATE_EDIT, mEditing);
 		outState.putInt(STATE_EDIT_INDEX, mPosEditing);
+		outState.putInt(STATE_SCROLLUSER, mScrollToOnUserList);
 	}
 
 	@Override
@@ -173,27 +231,41 @@ public class FragmentGradientList extends BaseFragment implements
 		super.onActivityCreated(inState);
 		if (inState != null) {
 			fR = (FragmentRender)AppUtils.getFragment(_home, inState, this, STATE_RENDER_FRAGMENT);
-			mListView.setSelection(mScrollPos);
+			try {
+				final AdapterView<?> av = (AdapterView<?>) findView(getPager(0).getCurrentItem());
+				av.setSelection(mScrollPos);
+				av.post(new Runnable() {
+					public void run() {
+						try {
+							av.setSelection(mScrollPos);
+						} catch (Exception ex) {
+							// no worries
+						}
+					}
+				});
+			} catch (Exception ex) {}
 		}
 	}
 
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
-    	mContainer.removeView(mListView);
+		((ViewGroup)getActivity().findViewById(R.id.ad_container)).removeView(mToolBar);
+	}
+	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
     	
-		for (Entry<Integer, WeakReference<Bitmap>> e : mImages.entrySet()) {
-			WeakReference<Bitmap> wrb = e.getValue();
-			if (wrb != null) {
-				Bitmap b = wrb.get();
-				if (b != null) {
-					b = M.freeBitmap(b);
-				}
-			}
-		}
-		mImages.clear();
-		mapIFS.clear();
-		adapterHistory.notifyDataSetChanged();
+//		for (Entry<Integer, WeakReference<Bitmap>> e : mImages.entrySet()) {
+//			WeakReference<Bitmap> wrb = e.getValue();
+//			if (wrb != null) {
+//				Bitmap b = wrb.get();
+//				if (b != null) {
+//					b = M.freeBitmap(b);
+//				}
+//			}
+//		}
 	}
 
 	/**
@@ -202,65 +274,18 @@ public class FragmentGradientList extends BaseFragment implements
 	 * @return : the gradient editor fragment
 	 */
 	private FragmentGradientEditor toGradientEditor(String edit) {
-		FragmentGradientEditor f = new FragmentGradientEditor(this);
-		f.setGradient(_home.mGallery, edit);
+		FragmentGradientEditor f = new FragmentGradientEditor();
+		if (f.setGradient(_home, _home.mGallery, edit))
+        	_home.setGradientEditing(FragmentGradientList.NEW_GRADIENT);
 		_home.toChildFragment(f);
 		return f;
 	}
 
-	/**
-	 * Render a color scheme preview to an image view
-	 * @param child : the image view
-	 * @param position : the color scheme index
-	 */
-	private void renderGradientToListView(ImageView child, int position) {
-		if (position == -1)
-			return;
-		ColorScheme cm = _home.mGallery.getColorSchemeByName(mapIFS.get(position)
-				.get(GRADIENT_TITLE));
-		if (cm != null) {
-			Bitmap gradient = cm.generatePreview(App.inDP(320), cm.getGradientCount(), false, 0);
-			if (child != null)
-				child.setImageBitmap(gradient);
-			mImages.put(position, new WeakReference<Bitmap>(gradient));
-		}
-		return;
-	}
-
-	/**
-	 * Call this to let the list know that there has been
-	 *  changes due to using the gradient editor and it should refresh.
-	 */
-	protected void gradientListUpdated() {
-		if (!isPaused())
-			onGradientListUpdated.run();
-		else
-			queueTask(FragmentEvent.OnResume, onGradientListUpdated);
-	}
-	
-	/**
-	 * Runnable that actually does the gradient list updating.
-	 */
-	private Runnable onGradientListUpdated = new Runnable() {
-		public void run() {
-			if (mEditing.equals(NEW_GRADIENT)) {
-				addColor(_home.mGallery.mColorSchemes.get(_home.mGallery.mColorSchemes.size() - 1));
-				adapterHistory.notifyDataSetChanged();
-				mListView.setSelection(mListView.getCount()-1);
-			} else {
-				mImages.remove(mPosEditing);
-				renderGradientToListView(
-						(ImageView) mListView.getChildAt(
-								mPosEditing - mListView.getFirstVisiblePosition())
-								.findViewById(R.id.icon), mPosEditing);
-			}
-		}
-	};
-
 	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position,
+	public void onItemClick(AdapterView<?> av, View view, int position,
 			long id) {
-		_home.setColorScheme(mapIFS.get(position).get(GRADIENT_TITLE));
+		ColorAdapter ca = (ColorAdapter)av.getAdapter();
+		_home.setColorScheme(ca.getData().get(position).get(GRADIENT_TITLE));
 		if (fR != null)
 			fR.onColorSchemeUpdated();
 		_home.onBackPressed();
@@ -274,19 +299,9 @@ public class FragmentGradientList extends BaseFragment implements
 			_home.mApp.tooltipToast(R.string.txt_upgrade_need_color_new);
 			return;
 		}
-		mEditing = NEW_GRADIENT;
+		_home.setGradientEditing(NEW_GRADIENT);
 		mPosEditing = -1;
-		toGradientEditor(mEditing);
-	}
-
-	/**
-	 * Add a color scheme to the list.
-	 * @param colorScheme : the {@link ColorScheme} object
-	 */
-	private void addColor(ColorScheme colorScheme) {
-		HashMap<String, String> map = new HashMap<String, String>();
-		map.put(GRADIENT_TITLE, colorScheme._name);
-		mapIFS.add(map);
+		toGradientEditor(_home.getGradientEditing());
 	}
 
 	@Override
@@ -308,60 +323,118 @@ public class FragmentGradientList extends BaseFragment implements
 	public String getTitle() {
 		return getString(R.string.title_color_schemes);
 	}
+	
+	private static class ViewHolder {
+		private View iconBorder;
+		private ImageView icon;
+		private TextView text;
+		public ViewHolder(View v) {
+			icon = (ImageView)v.findViewById(R.id.icon);
+			iconBorder = v.findViewById(R.id.iconborder);
+			text = (TextView)v.findViewById(R.id.newItemText);
+		}
+	}
 
 	/**
 	 * This class extends SimpleAdapter to provide an easy list of gradients.
 	 */
-	class ColorAdapter extends SimpleAdapter {
+	class ColorAdapter extends BaseAdapter {
 		
-		/** default constructor */
+		ArrayList<HashMap<String, String>> mData;
+		ArrayList<ColorScheme> cs;
+		
+		/** default constructor 
+		 * @param cs */
 		public ColorAdapter(Context context,
-				List<? extends Map<String, ?>> data, int resource,
-				String[] from, int[] to) {
-			super(context, data, resource, from, to);
+				ArrayList<ColorScheme> cs, ArrayList<HashMap<String, String>> data) {
+			mData = data;
+			this.cs = cs;
 		}
+
+		public ArrayList<HashMap<String, String>> getData() {
+			return mData;
+		}
+		
+		@Override
+	    public int getCount() {
+	        return mData.size();
+	    }
+
+		@Override
+	    public Object getItem(int position) {
+	        return mData.get(position);
+	    }
+
+		@Override
+	    public long getItemId(int position) {
+	        return position;
+	    }
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View v = convertView;
+			ViewHolder vh;
 			if (v == null) {
 				LayoutInflater vi = (LayoutInflater) _home
 						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				v = vi.inflate(R.layout.list_item_color, null);
-			}
-
-			View child = v.findViewById(R.id.icon);
-			if (child != null)
-				child.setVisibility(View.VISIBLE);
-			child = v.findViewById(R.id.iconborder);
-			if (child != null)
-				child.setVisibility(View.VISIBLE);
-			TextView t = (TextView) v.findViewById(R.id.newItemText);
-			if (t != null)
-				t.setVisibility(View.GONE);
-			for (int i = 0; i < from.length; i++) {
-				child = v.findViewById(to[i]);
-				if (child.getClass() == TextView.class)
-					((TextView) child).setText(mapIFS.get(position)
-							.get(from[i]));
-				else if (child.getClass() == ImageView.class) {
-					if (mImages.containsKey(position)) {
-						if (mImages.get(position).get() != null)
-							((ImageView) child).setImageBitmap(mImages.get(
-									position).get());
-						else
-							renderGradientToListView((ImageView) child, position);
-					} else
-						renderGradientToListView((ImageView) child, position);
-				}
-			}
+				vh = new ViewHolder(v);
+				v.setTag(vh);
+			} else
+				vh = (ViewHolder)v.getTag();
+			
+			vh.icon.setVisibility(View.VISIBLE);
+			vh.iconBorder.setVisibility(View.VISIBLE);
+			vh.text.setVisibility(View.GONE);
+			if (mImages.containsKey(position)) {
+				if (mImages.get(position).get() != null)
+					vh.icon.setImageBitmap(mImages.get(position).get());
+				else
+					renderGradientToListView(vh.icon, position);
+			} else
+				renderGradientToListView(vh.icon, position);
 
 			return v;
+		}
+
+		/**
+		 * Render a color scheme preview to an image view
+		 * @param child : the image view
+		 * @param position : the color scheme index
+		 */
+		private void renderGradientToListView(ImageView child, int position) {
+			if (position == -1)
+				return;
+			ColorScheme cm = _home.mGallery.getColorSchemeByName(mData.get(position)
+					.get(GRADIENT_TITLE));
+			if (cm != null) {
+				Bitmap gradient = cm.generatePreview(App.inDP(320), cm.getGradientCount(), false, 0);
+				if (child != null)
+					child.setImageBitmap(gradient);
+				mImages.put(mData.get(position)
+						.get(GRADIENT_TITLE), new WeakReference<Bitmap>(gradient));
+			}
+			return;
 		}
 	}
 	
 	@Override
 	protected int getAnimation(FragmentAnimation fa, BaseFragment f) {
 		return getDefaultAnimationSlideFromBottom(fa);
+	}
+	
+	@Override
+	protected int[] getIconData() {
+		return null;
+	}
+
+	@Override
+	protected boolean[] getVisibleData() {
+		return null;
+	}
+
+	@Override
+	protected int[] getColumnData() {
+		return null;
 	}
 }

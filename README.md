@@ -12,6 +12,8 @@ This app is based upon a framework I have made which you will need to use as a l
 
 As mentioned on the framework's page, you will need the [HoloEverywhere][github_holo] library because this framework uses ICS styling on all versions of Android. You will also need the [ActionBarSherlock][site_abs] library in order to use the Action Bar on all versions of Android.
 
+I have included modifed versions of [ColorPickerPreference][github_colorpicker] in this application's source. 
+
 ##Screenshots
 
 [![](http://resonos.com/gfx/fractal_ss1.png)](http://resonos.com/gfx/fractal_ss1.png) [![](http://resonos.com/gfx/fractal_ss2.png)](http://resonos.com/gfx/fractal_ss2.png) [![](http://resonos.com/gfx/fractal_ss3.png)](http://resonos.com/gfx/fractal_ss3.png) [![](http://resonos.com/gfx/fractal_ss4.png)](http://resonos.com/gfx/fractal_ss4.png) [![](http://resonos.com/gfx/fractal_ss5.png)](http://resonos.com/gfx/fractal_ss5.png) [![](http://resonos.com/gfx/fractal_ss6.png)](http://resonos.com/gfx/fractal_ss6.png)
@@ -29,5 +31,6 @@ Write me at chris ![](http://resonos.com/at.gif) resonos.com
 [resonos_website]: http://resonos.com/
 [github_resonos]: https://github.com/chrisnewhouse/Resonos-Android-Framework
 [github_holo]: https://github.com/ChristopheVersieux/HoloEverywhere
+[github_colorpicker]: https://github.com/attenzione/android-ColorPickerPreference
 [site_abs]: http://www.actionbarsherlock.com/
 [wiki_ifs]: http://en.wikipedia.org/wiki/Iterated_function_system

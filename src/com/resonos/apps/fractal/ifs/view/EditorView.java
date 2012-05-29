@@ -41,10 +41,14 @@ public class EditorView extends View {
 	// constants
 	
 	/** The default number of points to render */
-	public static final int DEF_IFS_EDITOR_POINTS = 10000;
+	public static int DEF_IFS_EDITOR_POINTS = 13000;
+	public static int DEF_IFS_EDITOR_POINTS_TABLET = 20000;
 	
 	/** The default grid unit for the editor */
 	public static final float DEF_IFS_EDITOR_GRID = 0.03125f;
+	
+	/** how often there should be a major gridline */
+	public static final int MAJOR_GRID_EVERY = 8;
 	
 	/** The minimum unit for skew parameters */
 	public static final float MIN_IFS_EDITOR_SKEW_SIZE = 0.001f;
@@ -80,6 +84,9 @@ public class EditorView extends View {
 	/** colors to draw */
 	public static final int COLOR_LINE = Color.BLACK, COLOR_LINE_DIM = 0xFF999999,
 				COLOR_LINE_HILITE = 0xFF0000FF, COLOR_LINE_HILITE_DIM = 0xFF0000AA;
+	
+	/** grid thickness */
+	public static final float STROKE_MAJOR = 1, STROKE_MINOR = 1;
 
 	// preferences and state
 	private static final String PREF_GRID = "prefEditorGrid";
@@ -162,6 +169,9 @@ public class EditorView extends View {
 	public EditorView(FragmentEditor f, Bundle savedInstanceState) {
 		super(f.getActivity());
 		_f = f;
+		
+		if (Math.min(App.SCREEN_HEIGHT, App.SCREEN_WIDTH)/App.DENSITY >= 600)
+			DEF_IFS_EDITOR_POINTS = DEF_IFS_EDITOR_POINTS_TABLET; // switch to tablet point count
 		
 		pointCount = DEF_IFS_EDITOR_POINTS + IFS_BUFFER_POINTS;
 		points = new float[(pointCount - IFS_BUFFER_POINTS) * 2];
@@ -332,10 +342,10 @@ public class EditorView extends View {
 					            		mouse.y - (t.size.y + t.skew.y*t.size.y)/2f)
 				                       	.rotateAround(mouse, t.angle);
 					            if (isUsingGrid()) {
-					                t.pos.x += mGridSize/2f;
-					                t.pos.x -= t.pos.x % mGridSize;
-					                t.pos.y += mGridSize/2f;
-					                t.pos.y -= t.pos.y % mGridSize;
+					                t.pos.x += mGridSize;
+					                t.pos.x -= t.pos.x % mGridSize * 2;
+					                t.pos.y += mGridSize;
+					                t.pos.y -= t.pos.y % mGridSize * 2;
 					            }
 					            setDirty(true);
 						        invalidate();
@@ -368,10 +378,10 @@ public class EditorView extends View {
 					            h = Math.max(2*(mouse.y-ctrPt.y)/(1+t.skew.y),MIN_IFS_EDITOR_SKEW_SIZE);
 	
 					            if (isUsingGrid()) {
-					                w += mGridSize/2f;
-					                w -= w % mGridSize;
-					                h += mGridSize/2f;
-					                h -= h % mGridSize;
+					                w += mGridSize;
+					                w -= w % mGridSize*2;
+					                h += mGridSize;
+					                h -= h % mGridSize*2;
 					            }
 	
 					            ctrPt.set(ctrPt.x - (1+t.skew.x)*w/2, ctrPt.y - (1+t.skew.y)*h/2)
@@ -501,7 +511,7 @@ public class EditorView extends View {
 			mGridSize = DEF_IFS_EDITOR_GRID;
 			
 			int min = 22, max = 2*min;
-			int count = Math.round(Math.min(inputR.height(),inputR.width())/unit);
+			int count = Math.max(1, Math.round(Math.min(inputR.height(),inputR.width())/unit));
 			while (count < min) {
 				count *= 2;
 				unit /= 2;
@@ -520,15 +530,60 @@ public class EditorView extends View {
 			inputR.bottom = inputR.bottom - (inputR.bottom % (unit)) + (unit);
 			inputR.offset((mOffX+brdr), (mOffY+brdr));
 			
+			// minor lines
+			paintGrid.setStrokeWidth(App.DENSITY * STROKE_MINOR / scale);
 			for (float i = inputR.left; i <= inputR.right; i += unit) {
-				float ox = (i + panned.x - w/2f) / scale + w/2f;//(i - w/2f) * scale + w/2f - panned.x / scale;
+				float ox_rem = (i - (mOffX+brdr)) % (unit * MAJOR_GRID_EVERY);
+				if (ox_rem < 0)
+					ox_rem += unit * MAJOR_GRID_EVERY;
+				boolean major = (ox_rem >= 0 && ox_rem <= (unit/2f))
+						|| (ox_rem >= (MAJOR_GRID_EVERY * unit - (unit/2f)));
+				if (major)
+					continue;
+				float ox = (i + panned.x - w/2f) / scale + w/2f;
 				int clr = Math.round(0xD5 + (0xFF - 0xD5) * M.fit(Math.abs(ox - w/2)/(2*mEditorSize) * scale - scale, 0, 1));
 				paintGrid.setColor(Color.argb(255, clr, clr, clr));
 				canvas.drawLine(i, inputR.top, i, inputR.bottom, paintGrid);
 			}
 			for (float i = inputR.top; i <= inputR.bottom; i += unit) {
-				float oy = (i + panned.y - h/2f) / scale + h/2f;//(i - h/2f) * scale + h/2f - panned.y / scale;
+				float oy_rem = (i - (mOffY+brdr)) % (unit * MAJOR_GRID_EVERY);
+				if (oy_rem < 0)
+					oy_rem += unit * MAJOR_GRID_EVERY;
+				boolean major = (oy_rem >= 0 && oy_rem <= (unit/2f))
+						|| (oy_rem >= (MAJOR_GRID_EVERY * unit - (unit/2f)));
+				if (major)
+					continue;
+				float oy = (i + panned.y - h/2f) / scale + h/2f;
 				int clr = Math.round(0xD5 + (0xFF - 0xD5) * M.fit(Math.abs(oy - h/2)/(2*mEditorSize) * scale - scale, 0, 1));
+				paintGrid.setColor(Color.argb(255, clr, clr, clr));
+				canvas.drawLine(inputR.left, i, inputR.right, i, paintGrid);
+			}
+			
+			// major lines
+			paintGrid.setStrokeWidth(App.DENSITY * STROKE_MAJOR / scale);
+			for (float i = inputR.left; i <= inputR.right; i += unit) {
+				float ox_rem = (i - (mOffX+brdr)) % (unit * MAJOR_GRID_EVERY);
+				if (ox_rem < 0)
+					ox_rem += unit * MAJOR_GRID_EVERY;
+				boolean major = (ox_rem >= 0 && ox_rem <= (unit/2f))
+						|| (ox_rem >= (MAJOR_GRID_EVERY * unit - (unit/2f)));
+				if (!major)
+					continue;
+				float ox = (i + panned.x - w/2f) / scale + w/2f;
+				int clr = Math.round(0x85 + (0xFF - 0x85) * M.fit(Math.abs(ox - w/2)/(2*mEditorSize) * scale - scale, 0, 1));
+				paintGrid.setColor(Color.argb(255, clr, clr, clr));
+				canvas.drawLine(i, inputR.top, i, inputR.bottom, paintGrid);
+			}
+			for (float i = inputR.top; i <= inputR.bottom; i += unit) {
+				float oy_rem = (i - (mOffY+brdr)) % (unit * MAJOR_GRID_EVERY);
+				if (oy_rem < 0)
+					oy_rem += unit * MAJOR_GRID_EVERY;
+				boolean major = (oy_rem >= 0 && oy_rem <= (unit/2f))
+						|| (oy_rem >= (MAJOR_GRID_EVERY * unit - (unit/2f)));
+				if (!major)
+					continue;
+				float oy = (i + panned.y - h/2f) / scale + h/2f;
+				int clr = Math.round(0x85 + (0xFF - 0x85) * M.fit(Math.abs(oy - h/2)/(2*mEditorSize) * scale - scale, 0, 1));
 				paintGrid.setColor(Color.argb(255, clr, clr, clr));
 				canvas.drawLine(inputR.left, i, inputR.right, i, paintGrid);
 			}
@@ -752,7 +807,7 @@ public class EditorView extends View {
         }
         setDirty(true);
         mTVW.resetAlteredWindow();
-        invalidate();
+        postInvalidate();
 	}
 	
 	/**

@@ -216,7 +216,7 @@ public class IFSRender {
 					if (task != null)
 						if (task.mCancel)
 							return;
-					mImage[t % fgColors.length][plotx][ploty]++;
+					mImage[t % mImage.length][plotx][ploty]++;
 					i++;
 					pointsDrawn = i;
 				}
@@ -320,7 +320,7 @@ public class IFSRender {
 	 */
 	public void onColorMapUpdated(FractalView fv) {
 		synchronized (mManager.mLock) {
-			if (mIm == null || mIm.isRecycled())
+			if (mIm == null || mIm.isRecycled() || mImage == null)
 				return;
 			try {
 				int[][] fgColors = mManager.mColorScheme.mFGColors;

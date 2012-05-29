@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import com.resonos.apps.fractal.ifs.FragmentRender.SliderAction;
 import com.resonos.apps.fractal.ifs.FragmentRender;
+import com.resonos.apps.fractal.ifs.FragmentRender.SliderAction;
 import com.resonos.apps.fractal.ifs.R;
 import com.resonos.apps.library.Action;
 import com.resonos.apps.library.util.M;
@@ -57,14 +57,14 @@ public class ToolBarRenderQuality extends ToolBar implements OnSeekBarChangeList
     	setupSliderBar(SliderAction.POINTS, PTS_MIN, PTS_MAX, _f.getPoints());
     	setupSliderBar2(SliderAction.STEPS, STEPS_MIN, STEPS_MAX, _f.getSteps());
 
-		super.init(_f._home, ToolBar.Param.STYLE_ACTION_MODE, ToolBar.Param.STYLE_SPLIT, ToolBar.Param.START_HIDDEN);
+		super.init(_f.getHome(), ToolBar.Param.STYLE_ACTION_MODE, ToolBar.Param.STYLE_SPLIT, ToolBar.Param.START_HIDDEN);
 	}
 
 	/** set up the second {@link SeekBar} */
 	public void setupSliderBar(SliderAction action, int min, int max, int start) {
 		start = M.fit(start, min, max);
 		mAction = action;
-    	mSeekBar = new SeekBar<Float>((float)min, (float)max, _f._home);
+    	mSeekBar = new SeekBar<Float>((float)min, (float)max, _f.getHome());
     	mSeekBar.setNotifyWhileDragging(false);
 		mSeekBar.setProgress((float)start);
 		mSeekBar.setOnSeekBarChangeListener(this);
@@ -74,7 +74,7 @@ public class ToolBarRenderQuality extends ToolBar implements OnSeekBarChangeList
 	public void setupSliderBar2(SliderAction action, int min, int max, int start) {
 		start = M.fit(start, min, max);
 		mAction2 = action;
-    	mSeekBar2 = new SeekBar<Float>(logBase(min), logBase(max), _f._home);
+    	mSeekBar2 = new SeekBar<Float>(logBase(min), logBase(max), _f.getHome());
     	mSeekBar2.setNotifyWhileDragging(false);
 		mSeekBar2.setProgress(logBase(start));
 		mSeekBar2.setOnSeekBarChangeListener(this);

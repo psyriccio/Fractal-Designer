@@ -135,7 +135,7 @@ public class FragmentEditor extends BaseFragment {
 	protected void onOptionsItemSelected(Enum<?> e) {
 		switch ((Actions)e) {
 		case OPEN:
-			_home.toSiblingFragment(new FragmentGallery(true), false);
+			_home.toSiblingFragment(FragmentGallery.create(true), false);
         	break;
 		case SAVE:
 			if (!_home.hasPro())
